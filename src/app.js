@@ -10,15 +10,13 @@ import refreshTokenMiddleware from './middlewares/tokenrefresh.midd.js';
 import { associateAllModels } from './models/index.js';
 import { seedInitialData } from './seed.js';
 
-import marca from './routers/marca.router.js';
-
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Hallalo API',
+      title: 'HollyU API',
       version: '1.0.0',
-      description: 'Documentación de la API de Hallalo',
+      description: 'Documentación de la API de HollyU',
     },
     servers: [
       {

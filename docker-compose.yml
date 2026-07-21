@@ -5,7 +5,7 @@ services:
     image: postgres:15
     container_name: HollyU_db
     environment:
-      POSTGRES_DB: Hallalo
+      POSTGRES_DB:  HollyU
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
     ports:
