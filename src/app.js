@@ -10,6 +10,9 @@ import refreshTokenMiddleware from './middlewares/tokenrefresh.midd.js';
 import { associateAllModels } from './models/index.js';
 import { seedInitialData } from './seed.js';
 
+import colores  from './routers/colores.router.js';
+
+
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -58,4 +61,4 @@ app.get('/', (req, res) => {
   res.send('HollyU API running');
 });
 
-// app.use('/api', marca);
+app.use('/api', colores);

@@ -1,6 +1,7 @@
 {
   "name": "hollyu-back",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "node --watch --watch-path ./src --env-file=.env --experimental-modules ./src/index.js",
