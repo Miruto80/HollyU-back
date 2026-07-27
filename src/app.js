@@ -11,6 +11,7 @@ import { associateAllModels } from './models/index.js';
 import { seedInitialData } from './seed.js';
 
 import colores  from './routers/colores.router.js';
+import productos from './routers/productos.router.js';
 
 
 const swaggerOptions = {
@@ -46,8 +47,8 @@ app.use(refreshTokenMiddleware);
 export const connectDatabase = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync({ force: false });
     associateAllModels();
+    await sequelize.sync({ force: false });
     console.log('Coneccion establecida correctamente.');
     await seedInitialData();
     console.log('Datos de la semilla creados.');
@@ -62,3 +63,4 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api', colores);
+app.use('/api', productos);
