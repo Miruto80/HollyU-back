@@ -20,9 +20,11 @@ import { Personalizaciones, associatePersonalizaciones } from './Personalizacion
 import { Producciones, associateProducciones } from './Producciones.model.js';
 import { Productos, associateProductos } from './Productos.model.js';
 import { Producto_imagenes, associateProducto_imagenes } from './Producto_imagenes.model.js';
+import { Producto_colores, associateProducto_colores } from './Producto_colores.model.js';
 import { Producto_variantes, associateProducto_variantes } from './Producto_variantes.model.js';
 import { Roles, associateRoles } from './Roles.model.js';
 import { Tallas, associateTallas } from './Tallas.model.js';
+import { Producto_tallas, associateProducto_tallas } from './Producto_tallas.model.js';
 import { Tipos_cliente, associateTipos_cliente } from './Tipos_cliente.model.js';
 import { Tipos_tela, associateTipos_tela } from './Tipos_tela.model.js';
 import { Tipos_venta, associateTipos_venta } from './Tipos_venta.model.js';
@@ -50,9 +52,11 @@ export const associateAllModels = (models = sequelize.models) => {
   associateProducciones(models);
   associateProductos(models);
   associateProducto_imagenes(models);
+  associateProducto_colores(models);
   associateProducto_variantes(models);
   associateRoles(models);
   associateTallas(models);
+  associateProducto_tallas(models);
   associateTipos_cliente(models);
   associateTipos_tela(models);
   associateTipos_venta(models);
@@ -81,9 +85,11 @@ export {
   Producciones,
   Productos,
   Producto_imagenes,
+  Producto_colores,
   Producto_variantes,
   Roles,
   Tallas,
+  Producto_tallas,
   Tipos_cliente,
   Tipos_tela,
   Tipos_venta,

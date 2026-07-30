@@ -40,23 +40,11 @@ export const seedInitialData = async () => {
     const tipoParticular = await createOrFind(Tipos_cliente, { nombre: 'Particular' });
     const tipoEmpresa = await createOrFind(Tipos_cliente, { nombre: 'Empresa' });
 
-    const categoriaVestidos = await createOrFind(
-      Categorias,
-      { nombre: 'Vestidos' },
-      { descripcion: 'Prendas femeninas y eventos' }
-    );
-
-    const categoriaConjuntos = await createOrFind(
-      Categorias,
-      { nombre: 'Conjuntos' },
-      { descripcion: 'Conjuntos y outfits completos' }
-    );
-
-    const categoriaAccesorios = await createOrFind(
-      Categorias,
-      { nombre: 'Accesorios' },
-      { descripcion: 'Complementos para moda' }
-    );
+    const categoriaEnfermeria = await createOrFind(
+  Categorias,
+  { nombre: 'Enfermería' },
+  { descripcion: 'Uniformes clínicos para personal de salud' }
+);
 
     const tipoTelaSeda = await createOrFind(
       Tipos_tela,
@@ -69,6 +57,12 @@ export const seedInitialData = async () => {
       { nombre: 'Algodón' },
       { descripcion: 'Tela cómoda y versátil' }
     );
+
+    const tipoTelaAntifluido = await createOrFind(
+  Tipos_tela,
+  { nombre: 'Antifluido' },
+  { descripcion: 'Tela resistente a líquidos para uso médico' }
+);
 
     const generoFemenino = await createOrFind(Generos, { nombre: 'Femenino' });
     const generoMasculino = await createOrFind(Generos, { nombre: 'Masculino' });
@@ -127,65 +121,32 @@ export const seedInitialData = async () => {
       }
     );
 
-    const vestidoBase = await createOrFind(
-      Productos,
-      { codigo: 'HOL-001' },
-      {
-        categoria_id: categoriaVestidos.id,
-        tipo_tela_id: tipoTelaSeda.id,
-        genero_id: generoFemenino.id,
-        nombre: 'Vestido de gala',
-        descripcion: 'Vestido elegante para eventos especiales',
-        permite_personalizacion: true,
-        tiempo_fabricacion: 7,
-        activo: true
-      }
-    );
+    const pijamaEnfermeria = await createOrFind(
+  Productos,
+  { codigo: 'ENF-001' },
+  {
+    categoria_id: categoriaEnfermeria.id,
+    tipo_tela_id: tipoTelaAntifluido.id,
+    genero_id: generoUnisex.id,
+    nombre: 'Pijama quirúrgica antifluido',
+    descripcion: 'Conjunto médico antifluido para enfermería y personal de salud',
+    permite_personalizacion: true,
+    tiempo_fabricacion: 7,
+    activo: true
+  }
+);
 
-    const conjuntoBase = await createOrFind(
-      Productos,
-      { codigo: 'HOL-002' },
-      {
-        categoria_id: categoriaConjuntos.id,
-        tipo_tela_id: tipoTelaAlgodon.id,
-        genero_id: generoUnisex.id,
-        nombre: 'Conjunto casual',
-        descripcion: 'Conjunto cómodo para uso diario',
-        permite_personalizacion: true,
-        tiempo_fabricacion: 5,
-        activo: true
-      }
-    );
+await pijamaEnfermeria.addColores([
+  colorAzul.id,
+  colorBlanco.id,
+  colorNegro.id
+]);
 
-    await createOrFind(
-      Producto_variantes,
-      { sku: 'HOL-001-NEG-XS' },
-      {
-        producto_id: vestidoBase.id,
-        color_id: colorNegro.id,
-        talla_id: tallaXS.id,
-        precio: 180000,
-        precio_mayor: 160000,
-        stock: 12,
-        stock_minimo: 3,
-        activo: true
-      }
-    );
-
-    await createOrFind(
-      Producto_variantes,
-      { sku: 'HOL-002-BLA-M' },
-      {
-        producto_id: conjuntoBase.id,
-        color_id: colorBlanco.id,
-        talla_id: tallaM.id,
-        precio: 140000,
-        precio_mayor: 125000,
-        stock: 8,
-        stock_minimo: 2,
-        activo: true
-      }
-    );
+await pijamaEnfermeria.addTallas([
+  tallaS.id,
+  tallaM.id,
+  tallaL.id
+]);
 
     console.log('Seed inicial completado para HollyU');
   } catch (error) {

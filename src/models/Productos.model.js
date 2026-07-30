@@ -17,7 +17,7 @@ export const Productos = sequelize.define('Productos', {
 }, { tableName: 'productos', timestamps: false });
 
 export const associateProductos = () => {
-  const { Categorias, Tipos_tela, Generos, Producto_variantes, Producto_imagenes, Detalle_cotizacion } = sequelize.models;
+  const { Categorias, Tipos_tela, Generos, Producto_variantes, Producto_imagenes, Detalle_cotizacion, Colores, Tallas, Producto_colores, Producto_tallas } = sequelize.models;
 
   Productos.belongsTo(Categorias, { foreignKey: 'categoria_id' });
   Categorias.hasMany(Productos, { foreignKey: 'categoria_id' });
@@ -36,4 +36,15 @@ export const associateProductos = () => {
 
   Productos.hasMany(Detalle_cotizacion, { foreignKey: 'producto_id' });
   Detalle_cotizacion.belongsTo(Productos, { foreignKey: 'producto_id' });
+
+    Productos.belongsToMany(Colores, {
+    through: Producto_colores,
+    foreignKey: 'producto_id',
+    otherKey: 'color_id'
+  });
+  Productos.belongsToMany(Tallas, {
+  through: Producto_tallas,
+  foreignKey: 'producto_id',
+  otherKey: 'talla_id'
+});
 };

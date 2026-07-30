@@ -7,8 +7,14 @@ export const Tallas = sequelize.define('Tallas', {
 }, { tableName: 'tallas', timestamps: false });
 
 export const associateTallas = () => {
-  const { Producto_variantes } = sequelize.models;
+  const { Producto_variantes, Producto_tallas, Productos } = sequelize.models;
 
   Tallas.hasMany(Producto_variantes, { foreignKey: 'talla_id' });
   Producto_variantes.belongsTo(Tallas, { foreignKey: 'talla_id' });
+
+  Tallas.belongsToMany(Productos, {
+    through: Producto_tallas,
+    foreignKey: 'talla_id',
+    otherKey: 'producto_id'
+  });
 };
