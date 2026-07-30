@@ -4,7 +4,6 @@ import sequelize from '../database/db.js';
 export const Productos = sequelize.define('Productos', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   categoria_id: { type: DataTypes.INTEGER, allowNull: false },
-  tipo_tela_id: { type: DataTypes.INTEGER },
   genero_id: { type: DataTypes.INTEGER },
   codigo: { type: DataTypes.STRING(50), allowNull: false, unique: true },
   nombre: { type: DataTypes.STRING(200), allowNull: false },
@@ -17,13 +16,10 @@ export const Productos = sequelize.define('Productos', {
 }, { tableName: 'productos', timestamps: false });
 
 export const associateProductos = () => {
-  const { Categorias, Tipos_tela, Generos, Producto_variantes, Producto_imagenes, Detalle_cotizacion, Colores, Tallas, Producto_colores, Producto_tallas } = sequelize.models;
+  const { Categorias, Generos, Producto_variantes, Modelos, Producto_imagenes, Detalle_cotizacion } = sequelize.models;
 
   Productos.belongsTo(Categorias, { foreignKey: 'categoria_id' });
   Categorias.hasMany(Productos, { foreignKey: 'categoria_id' });
-
-  Productos.belongsTo(Tipos_tela, { foreignKey: 'tipo_tela_id' });
-  Tipos_tela.hasMany(Productos, { foreignKey: 'tipo_tela_id' });
 
   Productos.belongsTo(Generos, { foreignKey: 'genero_id' });
   Generos.hasMany(Productos, { foreignKey: 'genero_id' });
@@ -37,14 +33,7 @@ export const associateProductos = () => {
   Productos.hasMany(Detalle_cotizacion, { foreignKey: 'producto_id' });
   Detalle_cotizacion.belongsTo(Productos, { foreignKey: 'producto_id' });
 
-    Productos.belongsToMany(Colores, {
-    through: Producto_colores,
-    foreignKey: 'producto_id',
-    otherKey: 'color_id'
-  });
-  Productos.belongsToMany(Tallas, {
-  through: Producto_tallas,
-  foreignKey: 'producto_id',
-  otherKey: 'talla_id'
-});
+  Productos.hasMany(Modelos, { foreignKey: 'producto_id' });
+  Modelos.belongsTo(Productos, { foreignKey: 'producto_id'});
+
 };

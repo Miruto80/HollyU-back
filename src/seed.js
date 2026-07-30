@@ -12,7 +12,10 @@ import {
   Colores,
   Tallas,
   Productos,
-  Producto_variantes
+  Modelos,
+  Modelo_telas,
+  Modelo_telas_colores,
+  Modelo_tallas
 } from './models/index.js';
 
 const createOrFind = async (Model, where, defaults = {}) => {
@@ -126,7 +129,6 @@ export const seedInitialData = async () => {
   { codigo: 'ENF-001' },
   {
     categoria_id: categoriaEnfermeria.id,
-    tipo_tela_id: tipoTelaAntifluido.id,
     genero_id: generoUnisex.id,
     nombre: 'Pijama quirúrgica antifluido',
     descripcion: 'Conjunto médico antifluido para enfermería y personal de salud',
@@ -136,17 +138,80 @@ export const seedInitialData = async () => {
   }
 );
 
-await pijamaEnfermeria.addColores([
-  colorAzul.id,
-  colorBlanco.id,
-  colorNegro.id
-]);
+const modeloCuelloV = await createOrFind(
+  Modelos,
+  {
+    producto_id: pijamaEnfermeria.id,
+    nombre: 'Cuello V'
+  },
+  {
+    descripcion: 'Pijama clínica cuello V'
+  }
+);
 
-await pijamaEnfermeria.addTallas([
-  tallaS.id,
-  tallaM.id,
-  tallaL.id
-]);
+const modeloTelaAntifluido = await createOrFind(
+  Modelo_telas,
+  {
+    modelo_id: modeloCuelloV.id,
+    tipo_tela_id: tipoTelaAntifluido.id
+  },
+  {
+    precio: 95000,
+    precio_mayor: 85000
+  }
+);
+
+await createOrFind(
+  Modelo_tallas,
+  {
+    modelo_id: modeloCuelloV.id,
+    talla_id: tallaS.id
+  }
+);
+
+
+await createOrFind(
+  Modelo_tallas,
+  {
+    modelo_id: modeloCuelloV.id,
+    talla_id: tallaM.id
+  }
+);
+
+
+await createOrFind(
+  Modelo_tallas,
+  {
+    modelo_id: modeloCuelloV.id,
+    talla_id: tallaL.id
+  }
+);
+
+await createOrFind(
+  Modelo_telas_colores,
+  {
+    modelo_tela_id: modeloTelaAntifluido.id,
+    color_id: colorAzul.id
+  }
+);
+
+
+await createOrFind(
+  Modelo_telas_colores,
+  {
+    modelo_tela_id: modeloTelaAntifluido.id,
+    color_id: colorBlanco.id
+  }
+);
+
+
+await createOrFind(
+  Modelo_telas_colores,
+  {
+    modelo_tela_id: modeloTelaAntifluido.id,
+    color_id: colorNegro.id
+  }
+);
 
     console.log('Seed inicial completado para HollyU');
   } catch (error) {
