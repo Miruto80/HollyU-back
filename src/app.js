@@ -4,11 +4,17 @@ import morgan from 'morgan';
 import compression from 'compression';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import path from "path";
+import { fileURLToPath } from 'url';
 
 import sequelize from './database/db.js';
 import refreshTokenMiddleware from './middlewares/tokenrefresh.midd.js';
 import { associateAllModels } from './models/index.js';
 import { seedInitialData } from './seed.js';
+
+// Configurar __dirname para ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import colores  from './routers/colores.router.js';
 import productos from './routers/productos.router.js';
@@ -43,6 +49,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(compression());
 app.use(refreshTokenMiddleware);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 export const connectDatabase = async () => {
   try {

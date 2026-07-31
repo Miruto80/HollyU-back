@@ -12,6 +12,7 @@ import {
   Colores,
   Tallas,
   Productos,
+  Producto_imagenes,
   Modelos,
   Modelo_telas,
   Modelo_telas_colores,
@@ -136,6 +137,18 @@ export const seedInitialData = async () => {
     tiempo_fabricacion: 7,
     activo: true
   }
+);
+
+await createOrFind(
+Producto_imagenes,
+{
+producto_id: pijamaEnfermeria.id,
+imagen: "/uploads/productos/IMG_4201.webp"
+},
+{
+principal: true,
+orden: 1
+}
 );
 
 const modeloCuelloV = await createOrFind(
