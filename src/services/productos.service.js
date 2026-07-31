@@ -1,3 +1,8 @@
+import path from 'path';
+import fs from 'fs';
+import sequelize from '../database/db.js';
+
+
 import { 
   Productos,
   Producto_imagenes,

@@ -29,7 +29,7 @@ export const postProductoController = async (req, res) => {
             archivo: req.file
         };
 
-        const producto = await createProducto(payload);
+        const producto = await postProducto(payload);
         res.status(201).json(producto);
     } catch (error) {
         console.error(error);
