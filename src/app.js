@@ -18,6 +18,10 @@ const __dirname = path.dirname(__filename);
 
 import colores  from './routers/colores.router.js';
 import productos from './routers/productos.router.js';
+import categorias from './routers/categorias.router.js';
+import generos from './routers/generos.router.js';
+import tallas from './routers/tallas.router.js';
+import tipos_tela from './routers/tipos_tela.router.js';
 
 
 const swaggerOptions = {
@@ -72,3 +76,7 @@ app.get('/', (req, res) => {
 
 app.use('/api', colores);
 app.use('/api', productos);
+app.use('/api', categorias);
+app.use('/api', generos);
+app.use('/api', tallas);
+app.use('/api', tipos_tela);

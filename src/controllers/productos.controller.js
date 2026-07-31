@@ -1,4 +1,4 @@
-import {getProductos, getProductoById} from '../services/productos.service.js';
+import {getProductos, getProductoById, postProducto} from '../services/productos.service.js';
 
 export const getProductosController = async (req, res) => {
     try {
@@ -18,5 +18,21 @@ export const getProductoByIdController = async (req, res) => {
         res.json(producto);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+export const postProductoController = async (req, res) => {
+    try {
+        const payload = {
+            ...req.body,
+            modelos: JSON.parse(req.body.modelos),
+            archivo: req.file
+        };
+
+        const producto = await createProducto(payload);
+        res.status(201).json(producto);
+    } catch (error) {
+        console.error(error);
+        res.status(400).json({ message: error.message });
     }
 };
