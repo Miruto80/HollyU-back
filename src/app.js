@@ -50,7 +50,7 @@ app.use(morgan('dev'));
 app.use(compression());
 app.use(refreshTokenMiddleware);
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 export const connectDatabase = async () => {
   try {

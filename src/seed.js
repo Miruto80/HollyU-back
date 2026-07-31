@@ -143,7 +143,7 @@ await createOrFind(
 Producto_imagenes,
 {
 producto_id: pijamaEnfermeria.id,
-imagen: "/uploads/productos/IMG_4201.webp"
+imagen: "/uploads/products/IMG_4201.webp"
 },
 {
 principal: true,
