@@ -23,7 +23,7 @@ import generos from './routers/generos.router.js';
 import tallas from './routers/tallas.router.js';
 import tipos_tela from './routers/tipos_tela.router.js';
 import modelos from './routers/modelos.router.js';
-
+import auth from './routers/auth.router.js';
 
 const swaggerOptions = {
   definition: {
@@ -82,3 +82,4 @@ app.use('/api', generos);
 app.use('/api', tallas);
 app.use('/api', tipos_tela);
 app.use('/api', modelos);
+app.use('/api', auth);

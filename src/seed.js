@@ -19,6 +19,8 @@ import {
   Modelo_tallas
 } from './models/index.js';
 
+import bcrypt from 'bcryptjs';
+
 const createOrFind = async (Model, where, defaults = {}) => {
   const [record, created] = await Model.findOrCreate({ where, defaults });
   if (created) {
@@ -80,20 +82,20 @@ export const seedInitialData = async () => {
     const tallaS = await createOrFind(Tallas, { nombre: 'S' });
     const tallaM = await createOrFind(Tallas, { nombre: 'M' });
     const tallaL = await createOrFind(Tallas, { nombre: 'L' });
+    const passwordHash = await bcrypt.hash('123456', 10);
 
-    await createOrFind(
-      Usuarios,
-      { email: 'admin@hollyu.com' },
-      {
-        rol_id: adminRole.id,
-        nombres: 'Administrador',
-        apellidos: 'HollyU',
-        telefono: '3000000000',
-        password: '123456',
-        activo: true
-      }
-    );
-
+   await createOrFind(
+  Usuarios,
+  { email: 'admin@hollyu.com' },
+  {
+    rol_id: adminRole.id,
+    nombres: 'Administrador',
+    apellidos: 'HollyU',
+    telefono: '3000000000',
+    password: passwordHash, 
+    activo: true
+  }
+);
     await createOrFind(
       Usuarios,
       { email: 'cliente@hollyu.com' },
@@ -102,7 +104,7 @@ export const seedInitialData = async () => {
         nombres: 'Cliente',
         apellidos: 'Demo',
         telefono: '3010000000',
-        password: '123456',
+        password: passwordHash,
         activo: true
       }
     );
