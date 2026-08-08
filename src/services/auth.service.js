@@ -20,7 +20,7 @@ export const login = async (email, password) => {
   const payload = {
     id: usuario.id,
     username: usuario.email,
-    role: usuario.Roles?.nombre,
+    role: usuario.Role?.nombre,
     clientId: null
   };
 
@@ -35,7 +35,7 @@ export const login = async (email, password) => {
       nombres: usuario.nombres,
       apellidos: usuario.apellidos,
       email: usuario.email,
-      rol: usuario.Roles?.nombre
+      rol: usuario.Role?.nombre
     }
   };
 };
