@@ -2,18 +2,18 @@ import jwt from "jsonwebtoken";
 import config from "../config/config.js"; // Asegúrate de que la ruta sea correcta
 
 const tokenUtil = {
-    generateToken: (payload, type = "access") => {
-      try {
-        const options = {
-          expiresIn: type === "access" ? config.jwtExpiresIn : "15m"
-        };
-        
-        return jwt.sign(payload, config.secret, options);
-      } catch (error) {
-        console.error('Error generando token:', error);
-        throw new Error('Error al generar token');
-      }
-    },
+  generateToken: (payload, type = "access") => {
+    try {
+      const options = {
+        expiresIn: type === "access" ? "1h" : config.jwtExpiresIn
+      };
+      
+      return jwt.sign(payload, config.secret, options);
+    } catch (error) {
+      console.error('Error generando token:', error);
+      throw new Error('Error al generar token');
+    }
+  },
   
     verifyToken: (token, type = "access") => {
       try {
