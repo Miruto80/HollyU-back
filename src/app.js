@@ -23,6 +23,8 @@ import generos from './routers/generos.router.js';
 import tallas from './routers/tallas.router.js';
 import tipos_tela from './routers/tipos_tela.router.js';
 import modelos from './routers/modelos.router.js';
+import pedidos from './routers/pedidos.router.js';
+import clientes from './routers/clientes.router.js';
 import auth from './routers/auth.router.js';
 
 const swaggerOptions = {
@@ -82,4 +84,6 @@ app.use('/api', generos);
 app.use('/api', tallas);
 app.use('/api', tipos_tela);
 app.use('/api', modelos);
+app.use('/api', pedidos);
+app.use('/api', clientes);
 app.use('/api', auth);
