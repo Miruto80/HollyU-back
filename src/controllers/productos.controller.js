@@ -2,7 +2,7 @@ import {getProductos, getProductoById, postProducto} from '../services/productos
 
 export const getProductosController = async (req, res) => {
     try {
-        const productos = await getProductos();
+        const productos = await getProductos(req.query);
         res.json(productos);
     } catch (error) {
         res.status(500).json({ message: error.message });

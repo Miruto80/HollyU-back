@@ -17,12 +17,27 @@ import {
   Generos
 } from '../models/index.js';
 
-export const getProductos = async () => {
+export const getProductos = async (filters = {}) => {
   try {
+    const where = {};
+
+    if (filters.categoria_id) {
+      where.categoria_id = filters.categoria_id;
+    }
+
+    if (filters.genero_id) {
+      where.genero_id = filters.genero_id;
+    }
+
+    if (filters.activo !== undefined) {
+      where.activo = filters.activo === 'true' || filters.activo === true;
+    }
+
     return await Productos.findAll({
+      where,
       attributes: [
         'id', 'codigo', 'nombre', 'activo',
-        'permite_personalizacion', 'tiempo_fabricacion', 'created_at'
+        'permite_personalizacion', 'tiempo_fabricacion', 'created_at', 'categoria_id', 'genero_id'
       ],
       include: [
         {
