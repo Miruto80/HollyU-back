@@ -8,3 +8,12 @@ export const getTallas = async () => {
         throw new Error("Error al obtener los tallas");
     }
 };
+
+export const postTallas = async (tallasData) => {
+    try {
+        const tallas = await Tallas.create(tallasData);
+        return tallas;
+    } catch (error) {
+        throw new Error("Error al crear la talla");
+    }     
+}

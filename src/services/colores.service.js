@@ -9,3 +9,12 @@ export const getColores = async () => {
         throw new Error("Error al obtener los colores");
     }
 };
+
+export const postColores = async (coloresData) => {
+    try {
+        const colores = await Colores.create(coloresData);
+        return colores;
+    } catch (error) {
+        throw new Error("Error al crear el color");
+    }     
+}
