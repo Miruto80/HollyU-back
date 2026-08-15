@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import sequelize from '../database/db.js';
 import {
   Pedidos,
@@ -19,10 +21,7 @@ import {
 export const getPedidos = async (filters = {}) => {
   try {
     const where = {};
-
-    if (filters.cliente_id) {
-      where.cliente_id = filters.cliente_id;
-    }
+    if (filters.cliente_id) where.cliente_id = filters.cliente_id;
 
     return await Pedidos.findAll({
       where,
@@ -92,14 +91,23 @@ export const postPedido = async (payload) => {
       estado_pedido_id,
       total_bs,
       observaciones,
-      items // [{ producto_id, modelo_id, tipo_tela_id, color_id, talla_id, variante_id, cantidad, precio, descuento }]
+      items, // [{ producto_id, modelo_id, tipo_tela_id, color_id, talla_id, variante_id, cantidad, precio, descuento }]
+
+      // datos del pago
+      metodo_pago_id,
+      estado_pago_id,
+      referencia,
+      banco_origen,
+      banco_destino,
+      telefono_emisor,
+      archivo // req.file del comprobante
     } = payload;
 
     if (!items || items.length === 0) {
       throw new Error('El pedido debe tener al menos un producto');
     }
 
-    // Validar regla "uno u otro" por cada línea
+    // Validar regla "uno u otro" por línea
     for (const item of items) {
       const esPersonalizado = Boolean(item.variante_id);
       const esNormal = Boolean(item.producto_id && item.modelo_id && item.tipo_tela_id && item.talla_id);
@@ -107,26 +115,22 @@ export const postPedido = async (payload) => {
       if (!esPersonalizado && !esNormal) {
         throw new Error('Cada producto del pedido debe tener variante_id (personalizado) o producto_id/modelo_id/tipo_tela_id/talla_id (normal)');
       }
-
       if (esPersonalizado && esNormal) {
         throw new Error('Un producto no puede ser normal y personalizado al mismo tiempo');
       }
     }
 
-    // Calcular subtotal y descuento total sumando cada línea
+    // Calcular subtotal y descuento
     let subtotal = 0;
     let descuentoTotal = 0;
-
     for (const item of items) {
       subtotal += item.precio * item.cantidad;
       descuentoTotal += item.descuento || 0;
     }
-
     const total = subtotal - descuentoTotal;
 
-    // Calcular fecha de entrega estimada = la más larga entre los productos del pedido
-    let maxTiempoFabricacion = 7; // valor por defecto si no se puede resolver
-
+    // Fecha de entrega estimada = la más larga entre los productos del pedido
+    let maxTiempoFabricacion = 7;
     const productosIds = items.filter(i => i.producto_id).map(i => i.producto_id);
     if (productosIds.length > 0) {
       const productos = await Productos.findAll({
@@ -136,7 +140,6 @@ export const postPedido = async (payload) => {
       const tiempos = productos.map(p => p.tiempo_fabricacion || 7);
       maxTiempoFabricacion = Math.max(...tiempos, 7);
     }
-
     const fechaEntregaEstimada = new Date();
     fechaEntregaEstimada.setDate(fechaEntregaEstimada.getDate() + maxTiempoFabricacion);
 
@@ -170,11 +173,37 @@ export const postPedido = async (payload) => {
       }, { transaction: t });
     }
 
+    // Mover el comprobante de tmp a su carpeta final
+    let comprobantePath = null;
+    if (archivo) {
+      const destFolder = path.join('uploads', 'pagos');
+      if (!fs.existsSync(destFolder)) {
+        fs.mkdirSync(destFolder, { recursive: true });
+      }
+      const destPath = path.join(destFolder, archivo.filename);
+      fs.renameSync(archivo.path, destPath);
+      comprobantePath = `/uploads/pagos/${archivo.filename}`;
+    }
+
+    // Crear el pago asociado
+    await Pagos.create({
+      pedido_id: pedido.id,
+      metodo_pago_id,
+      estado_pago_id,
+      monto: total,
+      referencia,
+      banco_origen,
+      banco_destino,
+      telefono_emisor,
+      comprobante: comprobantePath
+    }, { transaction: t });
+
     await t.commit();
     return getPedidoById(pedido.id);
 
   } catch (error) {
     await t.rollback();
+    if (payload.archivo) fs.unlink(payload.archivo.path, () => {});
     console.error('Error creating order:', error);
     throw error;
   }

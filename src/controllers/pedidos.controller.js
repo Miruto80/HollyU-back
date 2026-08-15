@@ -43,11 +43,17 @@ export const getPedidoByIdController = async (req, res) => {
 };
 
 export const postPedidoController = async (req, res) => {
-    try {
-        const newPedido = await postPedido(req.body);
-        res.status(201).json(newPedido);
-    } catch (error) {
-        console.error('Error creating order:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+  try {
+    const payload = {
+      ...req.body,
+      items: JSON.parse(req.body.items),
+      archivo: req.file
+    };
+
+    const pedido = await postPedido(payload);
+    res.status(201).json(pedido);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: error.message });
+  }
 };

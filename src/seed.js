@@ -1,6 +1,3 @@
-
-
-
 import {
   Roles,
   Usuarios,
@@ -18,7 +15,9 @@ import {
   Modelo_telas_colores,
   Modelo_tallas,
   Estados_pedido, 
-  Tipos_venta
+  Tipos_venta,
+  Metodos_pago, 
+  Estados_pago
 } from './models/index.js';
 
 import bcrypt from 'bcryptjs';
@@ -71,6 +70,15 @@ export const seedInitialData = async () => {
   { nombre: 'Antifluido' },
   { descripcion: 'Tela resistente a líquidos para uso médico' }
 );
+
+const metodoPagoMovil = await createOrFind(Metodos_pago, { nombre: 'Pago móvil' });
+const metodoTransferencia = await createOrFind(Metodos_pago, { nombre: 'Transferencia' });
+const metodoEfectivo = await createOrFind(Metodos_pago, { nombre: 'Efectivo' });
+
+const estadoPagoPendiente = await createOrFind(Estados_pago, { nombre: 'Pendiente de verificación' });
+const estadoPagoVerificado = await createOrFind(Estados_pago, { nombre: 'Verificado' });
+const estadoPagoRechazado = await createOrFind(Estados_pago, { nombre: 'Rechazado' });
+
 const estadoPendiente = await createOrFind(Estados_pedido, { nombre: 'Pendiente' }, { color: '#ffc107' });
 const estadoEnProduccion = await createOrFind(Estados_pedido, { nombre: 'En producción' }, { color: '#0d6efd' });
 const estadoListo = await createOrFind(Estados_pedido, { nombre: 'Listo para entrega' }, { color: '#20c997' });
