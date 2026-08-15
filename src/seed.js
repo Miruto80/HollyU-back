@@ -71,7 +71,15 @@ export const seedInitialData = async () => {
   { nombre: 'Antifluido' },
   { descripcion: 'Tela resistente a líquidos para uso médico' }
 );
-   
+const estadoPendiente = await createOrFind(Estados_pedido, { nombre: 'Pendiente' }, { color: '#ffc107' });
+const estadoEnProduccion = await createOrFind(Estados_pedido, { nombre: 'En producción' }, { color: '#0d6efd' });
+const estadoListo = await createOrFind(Estados_pedido, { nombre: 'Listo para entrega' }, { color: '#20c997' });
+const estadoEntregado = await createOrFind(Estados_pedido, { nombre: 'Entregado' }, { color: '#198754' });
+const estadoCancelado = await createOrFind(Estados_pedido, { nombre: 'Cancelado' }, { color: '#dc3545' });
+
+const tipoVentaWeb = await createOrFind(Tipos_venta, { nombre: 'Web' });
+const tipoVentaFisico = await createOrFind(Tipos_venta, { nombre: 'Fisico' });
+
     const generoFemenino = await createOrFind(Generos, { nombre: 'Femenino' });
     const generoMasculino = await createOrFind(Generos, { nombre: 'Masculino' });
     const generoUnisex = await createOrFind(Generos, { nombre: 'Unisex' });
