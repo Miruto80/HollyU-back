@@ -33,34 +33,19 @@ export const getProductos = async (filters = {}) => {
       where.activo = filters.activo === 'true' || filters.activo === true;
     }
 
-    return await Productos.findAll({
-      where,
+     return await Productos.findAll({
       attributes: [
-        'id', 'codigo', 'nombre', 'activo',
-        'permite_personalizacion', 'tiempo_fabricacion', 'created_at', 'categoria_id', 'genero_id'
+        'id', 'codigo', 'nombre', 'activo', 'precio', 'precio_mayor',
+        'permite_personalizacion', 'tiempo_fabricacion', 'created_at'
       ],
       include: [
-        {
-          model: Categorias,
-          attributes: ['id', 'nombre']
-        },
-        {
-          model: Generos,
-          attributes: ['id', 'nombre']
-        },
+        { model: Categorias, attributes: ['id', 'nombre'] },
+        { model: Generos, attributes: ['id', 'nombre'] },
         {
           model: Producto_imagenes,
           attributes: ['imagen'],
           where: { principal: true },
           required: false
-        },
-        {
-          model: Modelos,
-          attributes: ['id'],
-          include: [{
-            model: Modelo_telas,
-            attributes: ['precio', 'precio_mayor']
-          }]
         }
       ]
     });
@@ -119,18 +104,16 @@ export const postProducto = async (payload) => {
   const t = await sequelize.transaction();
 
   try {
-    const {
+     const {
       codigo, nombre, descripcion, categoria_id, genero_id,
+      precio, precio_mayor,
       permite_personalizacion, tiempo_fabricacion,
       modelos, archivo
     } = payload;
 
     const producto = await Productos.create({
-      codigo,
-      nombre,
-      descripcion,
-      categoria_id,
-      genero_id,
+      codigo, nombre, descripcion, categoria_id, genero_id,
+      precio, precio_mayor,
       permite_personalizacion: permite_personalizacion === 'true' || permite_personalizacion === true,
       tiempo_fabricacion
     }, { transaction: t });
@@ -152,7 +135,7 @@ export const postProducto = async (payload) => {
       }, { transaction: t });
     }
 
-    for (const m of modelos) {
+   for (const m of modelos) {
       const modelo = await Modelos.create({
         producto_id: producto.id,
         nombre: m.nombre,
@@ -162,9 +145,7 @@ export const postProducto = async (payload) => {
       for (const tela of m.telas) {
         const modeloTela = await Modelo_telas.create({
           modelo_id: modelo.id,
-          tipo_tela_id: tela.tipo_tela_id,
-          precio: tela.precio,
-          precio_mayor: tela.precio_mayor
+          tipo_tela_id: tela.tipo_tela_id
         }, { transaction: t });
 
         for (const colorId of tela.colores) {
@@ -188,11 +169,7 @@ export const postProducto = async (payload) => {
 
   } catch (error) {
     await t.rollback();
-
-    if (payload.archivo) {
-      fs.unlink(payload.archivo.path, () => {});
-    }
-
+    if (payload.archivo) fs.unlink(payload.archivo.path, () => {});
     console.error(error);
     throw error;
   }

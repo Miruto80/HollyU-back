@@ -8,6 +8,8 @@ export const Productos = sequelize.define('Productos', {
   codigo: { type: DataTypes.STRING(50), allowNull: false, unique: true },
   nombre: { type: DataTypes.STRING(200), allowNull: false },
   descripcion: { type: DataTypes.TEXT },
+  precio: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
+  precio_mayor: { type: DataTypes.DECIMAL(10, 2) },
   permite_personalizacion: { type: DataTypes.BOOLEAN, defaultValue: true },
   tiempo_fabricacion: { type: DataTypes.INTEGER, defaultValue: 7 },
   activo: { type: DataTypes.BOOLEAN, defaultValue: true },

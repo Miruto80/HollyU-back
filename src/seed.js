@@ -135,6 +135,8 @@ export const seedInitialData = async () => {
     genero_id: generoUnisex.id,
     nombre: 'Pijama quirúrgica antifluido',
     descripcion: 'Conjunto médico antifluido para enfermería y personal de salud',
+    precio: 95000,
+    precio_mayor: 85000,
     permite_personalizacion: true,
     tiempo_fabricacion: 7,
     activo: true
@@ -169,10 +171,6 @@ const modeloTelaAntifluido = await createOrFind(
   {
     modelo_id: modeloCuelloV.id,
     tipo_tela_id: tipoTelaAntifluido.id
-  },
-  {
-    precio: 95000,
-    precio_mayor: 85000
   }
 );
 

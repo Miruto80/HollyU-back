@@ -20,16 +20,6 @@ export const Modelo_telas = sequelize.define('Modelo_telas',{
         allowNull:false
     },
 
-    precio:{
-        type:DataTypes.DECIMAL(10,2),
-        allowNull:false
-    },
-
-    precio_mayor:{
-        type:DataTypes.DECIMAL(10,2)
-    }
-
-
 },{
     tableName:'modelo_telas',
     timestamps:false
