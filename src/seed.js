@@ -16,7 +16,9 @@ import {
   Modelos,
   Modelo_telas,
   Modelo_telas_colores,
-  Modelo_tallas
+  Modelo_tallas,
+  Estados_pedido, 
+  Tipos_venta
 } from './models/index.js';
 
 import bcrypt from 'bcryptjs';
@@ -69,7 +71,7 @@ export const seedInitialData = async () => {
   { nombre: 'Antifluido' },
   { descripcion: 'Tela resistente a líquidos para uso médico' }
 );
-
+   
     const generoFemenino = await createOrFind(Generos, { nombre: 'Femenino' });
     const generoMasculino = await createOrFind(Generos, { nombre: 'Masculino' });
     const generoUnisex = await createOrFind(Generos, { nombre: 'Unisex' });

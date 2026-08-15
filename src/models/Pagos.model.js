@@ -8,6 +8,10 @@ export const Pagos = sequelize.define('Pagos', {
   estado_pago_id: { type: DataTypes.INTEGER, allowNull: false },
   monto: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
   referencia: { type: DataTypes.STRING(100) },
+  banco_origen: { type: DataTypes.STRING(100) },        
+  banco_destino: { type: DataTypes.STRING(100) },       
+  telefono_emisor: { type: DataTypes.STRING(20) },      
+  comprobante: { type: DataTypes.STRING(255) },        
   fecha: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'pagos', timestamps: false });
 

@@ -10,7 +10,8 @@ export const Pedidos = sequelize.define('Pedidos', {
   subtotal: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
   descuento: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
   total: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
-  observaciones: { type: DataTypes.TEXT },
+  total_bs: { type: DataTypes.DECIMAL(14, 2) },
+  fecha_entrega_estimada: { type: DataTypes.DATE },  observaciones: { type: DataTypes.TEXT },
   fecha: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'pedidos', timestamps: false });
 
