@@ -34,7 +34,12 @@ export const getPedidos = async (filters = {}) => {
       include: [
         { model: Clientes, attributes: ['id', 'nombres', 'apellidos', 'email', 'telefono'] },
         { model: Estados_pedido, attributes: ['id', 'nombre'] },
-        { model: Tipos_venta, attributes: ['id', 'nombre'] }
+        { model: Tipos_venta, attributes: ['id', 'nombre'] },
+        {
+          model: Pagos,
+          attributes: ['id', 'referencia', 'estado_pago_id'],
+          include: [{ model: Estados_pago, attributes: ['id', 'nombre'] }]
+        }
       ],
       order: [['fecha', 'DESC']]
     });
