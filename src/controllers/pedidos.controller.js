@@ -1,4 +1,4 @@
-import { getPedidos, getPedidosByCliente, getPedidoById, postPedido } from '../services/pedidos.service.js';
+import { getPedidos, getPedidosByCliente, getPedidoById, postPedido, putPagoEstado } from '../services/pedidos.service.js';
 
 export const getPedidosController = async (req, res) => {
     try {
@@ -54,6 +54,21 @@ export const postPedidoController = async (req, res) => {
     res.status(201).json(pedido);
   } catch (error) {
     console.error(error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const putPagoEstadoController = async (req, res) => {
+  try {
+    const { estado_pago_id } = req.body;
+
+    if (!estado_pago_id) {
+      return res.status(400).json({ message: 'estado_pago_id es requerido' });
+    }
+
+    const pedido = await putPagoEstado(req.params.id, estado_pago_id);
+    res.json(pedido);
+  } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };

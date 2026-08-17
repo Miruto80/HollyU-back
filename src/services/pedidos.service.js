@@ -18,6 +18,12 @@ import {
   Estados_pago
 } from "../models/index.js";
 
+const ESTADO_PAGO_VERIFICADO = 2;
+const ESTADO_PAGO_RECHAZADO = 3;
+
+const ESTADO_PEDIDO_EN_PRODUCCION = 2;
+const ESTADO_PEDIDO_CANCELADO = 5;
+
 export const getPedidos = async (filters = {}) => {
   try {
     const where = {};
@@ -205,6 +211,40 @@ export const postPedido = async (payload) => {
     await t.rollback();
     if (payload.archivo) fs.unlink(payload.archivo.path, () => {});
     console.error('Error creating order:', error);
+    throw error;
+  }
+};
+
+
+export const putPagoEstado = async (pedidoId, estadoPagoId) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const estadoPagoIdNum = Number(estadoPagoId);
+
+    if (![ESTADO_PAGO_VERIFICADO, ESTADO_PAGO_RECHAZADO].includes(estadoPagoIdNum)) {
+      throw new Error('Estado de pago no válido, solo se permite Verificado o Rechazado');
+    }
+
+    const pago = await Pagos.findOne({ where: { pedido_id: pedidoId } });
+    if (!pago) throw new Error('No se encontró el pago asociado a este pedido');
+
+    await pago.update({ estado_pago_id: estadoPagoIdNum }, { transaction: t });
+
+    const nuevoEstadoPedido = estadoPagoIdNum === ESTADO_PAGO_VERIFICADO
+      ? ESTADO_PEDIDO_EN_PRODUCCION
+      : ESTADO_PEDIDO_CANCELADO;
+
+    await Pedidos.update(
+      { estado_pedido_id: nuevoEstadoPedido },
+      { where: { id: pedidoId }, transaction: t }
+    );
+
+    await t.commit();
+    return getPedidoById(pedidoId);
+  } catch (error) {
+    await t.rollback();
+    console.error(error);
     throw error;
   }
 };
