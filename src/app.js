@@ -26,6 +26,7 @@ import modelos from './routers/modelos.router.js';
 import pedidos from './routers/pedidos.router.js';
 import clientes from './routers/clientes.router.js';
 import auth from './routers/auth.router.js';
+import pagos from './routers/pagos.router.js';
 
 const swaggerOptions = {
   definition: {
@@ -87,3 +88,4 @@ app.use('/api', modelos);
 app.use('/api', pedidos);
 app.use('/api', clientes);
 app.use('/api', auth);
+app.use('/api', pagos);
