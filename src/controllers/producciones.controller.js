@@ -1,12 +1,19 @@
-import {getProducciones} from "../services/producciones.service.js";
+import { getProducciones, avanzarProduccion } from "../services/producciones.service.js";
 
 export const getProduccionesController = async (req, res) => {
-    try {
-        const filters = req.query;
-        const producciones = await getProducciones(filters);
-        res.json(producciones);
-    } catch (error) {
-        console.error('Error in getProduccionesController:', error);
-        res.status(500).json({ message: 'Error fetching producciones' });
-    }
+  try {
+    const producciones = await getProducciones();
+    res.json(producciones);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const patchAvanzarController = async (req, res) => {
+  try {
+    const produccion = await avanzarProduccion(req.params.id);
+    res.json(produccion);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 };
