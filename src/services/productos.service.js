@@ -106,14 +106,14 @@ export const postProducto = async (payload) => {
   try {
      const {
       codigo, nombre, descripcion, categoria_id, genero_id,
-      precio, precio_mayor,
+      precio, precio_mayor, stock,
       permite_personalizacion, tiempo_fabricacion,
       modelos, archivo
     } = payload;
 
     const producto = await Productos.create({
       codigo, nombre, descripcion, categoria_id, genero_id,
-      precio, precio_mayor,
+      precio, precio_mayor, stock: stock || 0,
       permite_personalizacion: permite_personalizacion === 'true' || permite_personalizacion === true,
       tiempo_fabricacion
     }, { transaction: t });

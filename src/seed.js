@@ -17,7 +17,8 @@ import {
   Estados_pedido, 
   Tipos_venta,
   Metodos_pago, 
-  Estados_pago
+  Estados_pago,
+  Estados_produccion
 } from './models/index.js';
 
 import bcrypt from 'bcryptjs';
@@ -70,6 +71,11 @@ export const seedInitialData = async () => {
   { nombre: 'Antifluido' },
   { descripcion: 'Tela resistente a líquidos para uso médico' }
 );
+
+const produccionCorte = await createOrFind(Estados_produccion, { nombre: 'Corte' }, { orden: 1 });
+const produccionCostura = await createOrFind(Estados_produccion, { nombre: 'Costura' }, { orden: 2 });
+const produccionCalidad = await createOrFind(Estados_produccion, { nombre: 'Control de calidad' }, { orden: 3 });
+const produccionTerminado = await createOrFind(Estados_produccion, { nombre: 'Terminado' }, { orden: 4 });
 
 const metodoPagoMovil = await createOrFind(Metodos_pago, { nombre: 'Pago móvil' });
 const metodoTransferencia = await createOrFind(Metodos_pago, { nombre: 'Transferencia' });

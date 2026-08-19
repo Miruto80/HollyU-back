@@ -15,14 +15,18 @@ import {
   Producto_variantes,
   Pagos,
   Metodos_pago,
-  Estados_pago
+  Estados_pago,
+  Producciones
 } from "../models/index.js";
 
 const ESTADO_PAGO_VERIFICADO = 2;
 const ESTADO_PAGO_RECHAZADO = 3;
 
 const ESTADO_PEDIDO_EN_PRODUCCION = 2;
+const ESTADO_PEDIDO_LISTO_ENTREGA = 3;
 const ESTADO_PEDIDO_CANCELADO = 5;
+
+const ESTADO_PRODUCCION_INICIAL = 1; 
 
 export const getPedidos = async (filters = {}) => {
   try {
@@ -236,17 +240,63 @@ export const putPagoEstado = async (pedidoId, estadoPagoId) => {
 
     await pago.update({ estado_pago_id: estadoPagoIdNum }, { transaction: t });
 
-    const nuevoEstadoPedido = estadoPagoIdNum === ESTADO_PAGO_VERIFICADO
-      ? ESTADO_PEDIDO_EN_PRODUCCION
-      : ESTADO_PEDIDO_CANCELADO;
+    if (estadoPagoIdNum === ESTADO_PAGO_RECHAZADO) {
+      await Pedidos.update(
+        { estado_pedido_id: ESTADO_PEDIDO_CANCELADO },
+        { where: { id: pedidoId }, transaction: t }
+      );
+      await t.commit();
+      return getPedidoById(pedidoId);
+    }
+    // Si el pago fue verificado, revisar stock y actualizar estado del pedido
+    const detalle = await Detalle_pedido.findAll({
+      where: { pedido_id: pedidoId },
+      include: [{ model: Productos, attributes: ['id', 'stock'] }],
+      transaction: t
+    });
 
-    await Pedidos.update(
-      { estado_pedido_id: nuevoEstadoPedido },
-      { where: { id: pedidoId }, transaction: t }
-    );
+    const lineasSinStock = [];
+
+    for (const item of detalle) {
+      if (!item.Producto) continue; // pedido personalizado, sin producto_id directo
+
+      if (item.Producto.stock >= item.cantidad) {
+        // Hay stock suficiente: se descuenta
+        await Productos.decrement('stock', {
+          by: item.cantidad,
+          where: { id: item.Producto.id },
+          transaction: t
+        });
+      } else {
+        lineasSinStock.push(item);
+      }
+    }
+
+    const necesitaProduccion = lineasSinStock.length > 0;
+
+    if (necesitaProduccion) {
+      await Pedidos.update(
+        { estado_pedido_id: ESTADO_PEDIDO_EN_PRODUCCION },
+        { where: { id: pedidoId }, transaction: t }
+      );
+
+      for (const item of lineasSinStock) {
+        await Producciones.create({
+          pedido_id: pedidoId,
+          estado_produccion_id: ESTADO_PRODUCCION_INICIAL,
+          fecha_inicio: new Date()
+        }, { transaction: t });
+      }
+    } else {
+      await Pedidos.update(
+        { estado_pedido_id: ESTADO_PEDIDO_LISTO_ENTREGA },
+        { where: { id: pedidoId }, transaction: t }
+      );
+    }
 
     await t.commit();
     return getPedidoById(pedidoId);
+
   } catch (error) {
     await t.rollback();
     console.error(error);
