@@ -34,6 +34,7 @@ export const getProductos = async (filters = {}) => {
     }
 
      return await Productos.findAll({
+      where,
       attributes: [
         'id', 'codigo', 'nombre', 'activo', 'precio', 'precio_mayor',
         'permite_personalizacion', 'tiempo_fabricacion', 'created_at'
