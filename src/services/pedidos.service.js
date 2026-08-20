@@ -303,3 +303,34 @@ export const putPagoEstado = async (pedidoId, estadoPagoId) => {
     throw error;
   }
 };
+
+export const avanzarEstadoPedido = async (pedidoId) => {
+  const pedido = await Pedidos.findByPk(pedidoId, {
+    include: [
+      { model: Estados_pedido },
+      { model: Pagos, include: [{ model: Estados_pago }] }
+    ]
+  });
+
+  if (!pedido) throw new Error('Pedido no encontrado');
+
+  const estadoPago = pedido.Pagos?.[0]?.Estados_pago?.nombre;
+  if (estadoPago !== 'Verificado') {
+    throw new Error('Solo se puede cambiar el estado de un pedido con pago verificado');
+  }
+
+  const siguienteEstado = {
+    'En producción': 'Listo para entrega',
+    'Listo para entrega': 'Entregado'
+  }[pedido.Estados_pedido?.nombre];
+
+  if (!siguienteEstado) {
+    throw new Error('El pedido no tiene un siguiente estado disponible');
+  }
+
+  const estado = await Estados_pedido.findOne({ where: { nombre: siguienteEstado } });
+  if (!estado) throw new Error(`No existe el estado de pedido ${siguienteEstado}`);
+
+  await pedido.update({ estado_pedido_id: estado.id });
+  return getPedidoById(pedidoId);
+};

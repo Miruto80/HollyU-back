@@ -1,4 +1,4 @@
-import { getPedidos, getPedidosByCliente, getPedidoById, postPedido, putPagoEstado } from '../services/pedidos.service.js';
+import { getPedidos, getPedidosByCliente, getPedidoById, postPedido, putPagoEstado, avanzarEstadoPedido } from '../services/pedidos.service.js';
 
 export const getPedidosController = async (req, res) => {
     try {
@@ -67,6 +67,15 @@ export const putPagoEstadoController = async (req, res) => {
     }
 
     const pedido = await putPagoEstado(req.params.id, estado_pago_id);
+    res.json(pedido);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const avanzarEstadoPedidoController = async (req, res) => {
+  try {
+    const pedido = await avanzarEstadoPedido(req.params.id);
     res.json(pedido);
   } catch (error) {
     res.status(400).json({ message: error.message });
