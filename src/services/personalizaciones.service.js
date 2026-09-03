@@ -1,9 +1,55 @@
 import fs from 'fs';
 import path from 'path';
-import { Clientes, Productos, Personalizaciones } from '../models/index.js';
+import {
+  Clientes,
+  Cotizaciones,
+  Detalle_cotizacion,
+  Estados_cotizacion,
+  Personalizaciones,
+  Productos,
+  Producto_imagenes
+} from '../models/index.js';
+
+
+export const getPersonalizaciones = async (filters = {}) => {
+  try {
+    const where = {};
+    if (filters.cliente_id) {
+      where.cliente_id = filters.cliente_id;
+    }
+    if (filters.producto_id) {
+      where.producto_id = filters.producto_id;
+    }
+    if (filters.estado) {
+      where.estado = filters.estado;
+    }
+
+    return await Personalizaciones.findAll({
+      where,
+      include: [
+        { model: Clientes, attributes: ['id', 'nombres', 'apellidos', 'email'] },
+        {
+          model: Productos,
+          attributes: ['id', 'codigo', 'nombre', 'precio'],
+          include: [{ model: Producto_imagenes, attributes: ['imagen'] }]
+        }
+      ],
+      order: [['id', 'DESC']]
+    });
+  } catch (error) {
+    throw error;
+  }
+};
 
 export const postPersonalizacion = async (payload) => {
-  const { cliente_id, producto_id, descripcion_solicitada, observaciones, archivo } = payload;
+  const {
+    cliente_id,
+    producto_id,
+    descripcion_solicitada,
+    observaciones,
+    imagen_referencia,
+    archivo
+  } = payload;
 
   if (!cliente_id || !producto_id) {
     throw new Error('cliente_id y producto_id son requeridos');
@@ -23,7 +69,7 @@ export const postPersonalizacion = async (payload) => {
     throw new Error('Este producto no permite personalización');
   }
 
-  let imagenReferencia = null;
+  let imagenReferencia = imagen_referencia || null;
   if (archivo) {
     const destFolder = path.join('uploads', 'personalizaciones');
     fs.mkdirSync(destFolder, { recursive: true });
@@ -45,4 +91,67 @@ export const postPersonalizacion = async (payload) => {
     if (archivo) fs.unlink(path.join('uploads', 'personalizaciones', archivo.filename), () => {});
     throw error;
   }
+};
+
+export const cotizarPersonalizacion = async (id, payload = {}) => {
+  const precio = Number(payload.precio);
+  if (!Number.isFinite(precio) || precio <= 0) {
+    throw new Error('El precio de la cotización debe ser mayor que cero');
+  }
+
+  const personalizacion = await Personalizaciones.findByPk(id);
+  if (!personalizacion) throw new Error('Personalización no encontrada');
+  if (personalizacion.estado === 'rechazada') {
+    throw new Error('No se puede cotizar una personalización rechazada');
+  }
+  if (personalizacion.cotizacion_id) {
+    throw new Error('Esta personalización ya tiene una cotización');
+  }
+
+  const estado = await Estados_cotizacion.findOrCreate({
+    where: { nombre: 'Pendiente' }
+  }).then(([record]) => record);
+
+  const cotizacion = await Cotizaciones.create({
+    cliente_id: personalizacion.cliente_id,
+    estado_cotizacion_id: estado.id,
+    subtotal: precio,
+    descuento: 0,
+    total: precio,
+    observaciones: payload.observaciones || `Personalización #${personalizacion.id}`
+  });
+
+  await Detalle_cotizacion.create({
+    cotizacion_id: cotizacion.id,
+    producto_id: personalizacion.producto_id,
+    cantidad: 1,
+    precio
+  });
+
+  await personalizacion.update({
+    estado: 'cotizada',
+    precio_cotizado: precio,
+    cotizacion_id: cotizacion.id,
+    respuesta_admin: payload.observaciones || null,
+    fecha_aprobacion: new Date(),
+    fecha_cotizacion: new Date()
+  });
+
+  return personalizacion;
+};
+
+export const rechazarPersonalizacion = async (id, respuesta_admin) => {
+  const personalizacion = await Personalizaciones.findByPk(id);
+  if (!personalizacion) throw new Error('Personalización no encontrada');
+  if (personalizacion.cotizacion_id) {
+    throw new Error('No se puede rechazar una personalización ya cotizada');
+  }
+
+  await personalizacion.update({
+    estado: 'rechazada',
+    respuesta_admin: respuesta_admin || null,
+    fecha_aprobacion: new Date()
+  });
+
+  return personalizacion;
 };
