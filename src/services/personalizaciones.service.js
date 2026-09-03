@@ -51,21 +51,19 @@ export const postPersonalizacion = async (payload) => {
     archivo
   } = payload;
 
-  if (!cliente_id || !producto_id) {
-    throw new Error('cliente_id y producto_id son requeridos');
+  if (!cliente_id) {
+    throw new Error('cliente_id es requerido');
   }
   if (!descripcion_solicitada || !descripcion_solicitada.trim()) {
     throw new Error('La descripción de la personalización es requerida');
   }
 
-  const [cliente, producto] = await Promise.all([
-    Clientes.findByPk(cliente_id),
-    Productos.findByPk(producto_id)
-  ]);
+  const cliente = await Clientes.findByPk(cliente_id);
+  const producto = producto_id ? await Productos.findByPk(producto_id) : null;
 
   if (!cliente) throw new Error('Cliente no encontrado');
-  if (!producto) throw new Error('Producto no encontrado');
-  if (!producto.permite_personalizacion) {
+  if (producto_id && !producto) throw new Error('Producto no encontrado');
+  if (producto && !producto.permite_personalizacion) {
     throw new Error('Este producto no permite personalización');
   }
 
@@ -121,12 +119,14 @@ export const cotizarPersonalizacion = async (id, payload = {}) => {
     observaciones: payload.observaciones || `Personalización #${personalizacion.id}`
   });
 
-  await Detalle_cotizacion.create({
-    cotizacion_id: cotizacion.id,
-    producto_id: personalizacion.producto_id,
-    cantidad: 1,
-    precio
-  });
+  if (personalizacion.producto_id) {
+    await Detalle_cotizacion.create({
+      cotizacion_id: cotizacion.id,
+      producto_id: personalizacion.producto_id,
+      cantidad: 1,
+      precio
+    });
+  }
 
   await personalizacion.update({
     estado: 'cotizada',

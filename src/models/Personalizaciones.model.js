@@ -4,7 +4,7 @@ import sequelize from '../database/db.js';
 export const Personalizaciones = sequelize.define('Personalizaciones', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   cliente_id: { type: DataTypes.INTEGER, allowNull: false },
-  producto_id: { type: DataTypes.INTEGER, allowNull: false },
+  producto_id: { type: DataTypes.INTEGER },
   pedido_id: { type: DataTypes.INTEGER },
   descripcion_solicitada: { type: DataTypes.TEXT, allowNull: false },
   imagen_referencia: { type: DataTypes.TEXT },
