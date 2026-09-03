@@ -12,7 +12,6 @@ import {
   Tipos_tela,
   Colores,
   Tallas,
-  Producto_variantes,
   Pagos,
   Metodos_pago,
   Estados_pago,
@@ -77,7 +76,6 @@ export const getPedidoById = async (id) => {
             { model: Tipos_tela, attributes: ['id', 'nombre'] },
             { model: Colores, attributes: ['id', 'nombre', 'codigo_hex'] },
             { model: Tallas, attributes: ['id', 'nombre'] },
-            { model: Producto_variantes }
           ]
         },
         {
@@ -106,7 +104,7 @@ export const postPedido = async (payload) => {
       estado_pedido_id,
       total_bs,
       observaciones,
-      items, // [{ producto_id, modelo_id, tipo_tela_id, color_id, talla_id, variante_id, cantidad, precio, descuento }]
+      items, // [{ producto_id, modelo_id, tipo_tela_id, color_id, talla_id, cantidad, precio, descuento }]
 
       // datos del pago
       metodo_pago_id,
@@ -122,16 +120,12 @@ export const postPedido = async (payload) => {
       throw new Error('El pedido debe tener al menos un producto');
     }
 
-    // Validar regla "uno u otro" por línea
+    // Cada línea debe identificar el producto y sus opciones del catálogo.
     for (const item of items) {
-      const esPersonalizado = Boolean(item.variante_id);
       const esNormal = Boolean(item.producto_id && item.modelo_id && item.tipo_tela_id && item.talla_id);
 
-      if (!esPersonalizado && !esNormal) {
-        throw new Error('Cada producto del pedido debe tener variante_id (personalizado) o producto_id/modelo_id/tipo_tela_id/talla_id (normal)');
-      }
-      if (esPersonalizado && esNormal) {
-        throw new Error('Un producto no puede ser normal y personalizado al mismo tiempo');
+      if (!esNormal) {
+        throw new Error('Cada producto del pedido debe tener producto_id/modelo_id/tipo_tela_id/talla_id');
       }
     }
 
@@ -181,7 +175,6 @@ export const postPedido = async (payload) => {
         tipo_tela_id: item.tipo_tela_id || null,
         color_id: item.color_id || null,
         talla_id: item.talla_id || null,
-        variante_id: item.variante_id || null,
         cantidad: item.cantidad,
         precio: item.precio,
         descuento: item.descuento || 0

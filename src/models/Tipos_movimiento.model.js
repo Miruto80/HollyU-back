@@ -6,9 +6,4 @@ export const Tipos_movimiento = sequelize.define('Tipos_movimiento', {
   nombre: { type: DataTypes.STRING(50), allowNull: false, unique: true }
 }, { tableName: 'tipos_movimiento', timestamps: false });
 
-export const associateTipos_movimiento = () => {
-  const { Movimientos_inventario } = sequelize.models;
-
-  Tipos_movimiento.hasMany(Movimientos_inventario, { foreignKey: 'tipo_movimiento_id' });
-  Movimientos_inventario.belongsTo(Tipos_movimiento, { foreignKey: 'tipo_movimiento_id' });
-};
+export const associateTipos_movimiento = () => {};
