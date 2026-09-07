@@ -4,6 +4,7 @@ import sequelize from '../database/db.js';
 export const Pedidos = sequelize.define('Pedidos', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   cliente_id: { type: DataTypes.INTEGER, allowNull: false },
+  cotizacion_id: { type: DataTypes.INTEGER },
   usuario_id: { type: DataTypes.INTEGER },
   tipo_venta_id: { type: DataTypes.INTEGER, allowNull: false },
   estado_pedido_id: { type: DataTypes.INTEGER, allowNull: false },
