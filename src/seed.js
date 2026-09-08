@@ -19,7 +19,8 @@ import {
   Metodos_pago, 
   Estados_pago,
   Estados_produccion,
-  Tipo_bota
+  Tipo_bota,
+  Tipos_descuento
 } from './models/index.js';
 
 import bcrypt from 'bcryptjs';
@@ -77,6 +78,9 @@ const produccionCorte = await createOrFind(Estados_produccion, { nombre: 'Corte'
 const produccionCostura = await createOrFind(Estados_produccion, { nombre: 'Costura' }, { orden: 2 });
 const produccionCalidad = await createOrFind(Estados_produccion, { nombre: 'Control de calidad' }, { orden: 3 });
 const produccionTerminado = await createOrFind(Estados_produccion, { nombre: 'Terminado' }, { orden: 4 });
+
+const tipoDescuentoPorcentaje = await createOrFind(Tipos_descuento, { nombre: 'Porcentaje' });
+const tipoDescuentoFijo = await createOrFind(Tipos_descuento, { nombre: 'Monto fijo' });
 
 const botaJogger = await createOrFind(Tipo_bota, { nombre: 'Jogger' });
 

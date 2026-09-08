@@ -31,6 +31,9 @@ import { Tipos_tela, associateTipos_tela } from './Tipos_tela.model.js';
 import { Tipos_venta, associateTipos_venta } from './Tipos_venta.model.js';
 import { Tipo_bota, associateTipo_bota } from './Tipo_bota.model.js';
 import { Usuarios, associateUsuarios } from './Usuarios.model.js';
+import { Tipos_descuento, associateTipos_descuento } from './Tipos_descuento.model.js';
+import { Descuentos, associateDescuentos } from './Descuentos.model.js';
+import { Producto_descuentos, associateProducto_descuentos } from './Producto_descuentos.model.js';
 
 export const associateAllModels = (models = sequelize.models) => {
   associateCategorias(models);
@@ -65,6 +68,9 @@ export const associateAllModels = (models = sequelize.models) => {
   associateTipos_venta(models);
   associateTipo_bota(models);
   associateUsuarios(models);
+  associateTipos_descuento(models);
+  associateDescuentos(models);
+  associateProducto_descuentos(models);
 };
 
 export {
@@ -99,5 +105,8 @@ export {
   Tipos_tela,
   Tipos_venta,
   Tipo_bota,
-  Usuarios
+  Usuarios,
+  Tipos_descuento,
+  Descuentos,
+  Producto_descuentos
 };

@@ -31,6 +31,8 @@ import pagos from './routers/pagos.router.js';
 import producciones from './routers/producciones.router.js';
 import personalizaciones from './routers/personalizaciones.router.js';
 import cotizaciones from './routers/cotizaciones.router.js';
+import descuentos from './routers/descuentos.router.js';
+import tipos_descuento from './routers/tipos_descuento.router.js';
 
 const swaggerOptions = {
   definition: {
@@ -97,3 +99,5 @@ app.use('/api', pagos);
 app.use('/api', producciones);
 app.use('/api', personalizaciones);
 app.use('/api', cotizaciones);
+app.use('/api', descuentos);
+app.use('/api', tipos_descuento);
