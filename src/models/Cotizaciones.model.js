@@ -6,7 +6,6 @@ export const Cotizaciones = sequelize.define('Cotizaciones', {
   cliente_id: { type: DataTypes.INTEGER, allowNull: false },
   estado_cotizacion_id: { type: DataTypes.INTEGER, allowNull: false },
   subtotal: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
-  descuento: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
   total: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
   observaciones: { type: DataTypes.TEXT },
   fecha: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
