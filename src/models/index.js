@@ -29,6 +29,7 @@ import { Tallas, associateTallas } from './Tallas.model.js';
 import { Tipos_cliente, associateTipos_cliente } from './Tipos_cliente.model.js';
 import { Tipos_tela, associateTipos_tela } from './Tipos_tela.model.js';
 import { Tipos_venta, associateTipos_venta } from './Tipos_venta.model.js';
+import { Tipo_bota, associateTipo_bota } from './Tipo_bota.model.js';
 import { Usuarios, associateUsuarios } from './Usuarios.model.js';
 
 export const associateAllModels = (models = sequelize.models) => {
@@ -62,6 +63,7 @@ export const associateAllModels = (models = sequelize.models) => {
   associateTipos_cliente(models);
   associateTipos_tela(models);
   associateTipos_venta(models);
+  associateTipo_bota(models);
   associateUsuarios(models);
 };
 
@@ -96,5 +98,6 @@ export {
   Tipos_cliente,
   Tipos_tela,
   Tipos_venta,
+  Tipo_bota,
   Usuarios
 };

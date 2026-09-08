@@ -14,7 +14,8 @@ import {
   Colores,
   Tallas,
   Categorias,
-  Generos
+  Generos,
+  Tipo_bota
 } from '../models/index.js';
 
 export const getProductos = async (filters = {}) => {
@@ -36,12 +37,13 @@ export const getProductos = async (filters = {}) => {
      return await Productos.findAll({
       where,
       attributes: [
-        'id', 'nombre', 'activo', 'precio', 'precio_mayor',
+        'id', 'tipo_bota_id', 'nombre', 'activo', 'precio', 'precio_mayor',
         'permite_personalizacion', 'tiempo_fabricacion', 'created_at'
       ],
       include: [
         { model: Categorias, attributes: ['id', 'nombre'] },
         { model: Generos, attributes: ['id', 'nombre'] },
+        { model: Tipo_bota, attributes: ['id', 'nombre'], required: false },
         {
           model: Producto_imagenes,
           attributes: ['imagen'],
@@ -106,14 +108,14 @@ export const postProducto = async (payload) => {
 
   try {
     const {
-      nombre, descripcion, categoria_id, genero_id,
+      nombre, descripcion, categoria_id, genero_id, tipo_bota_id,
       precio, precio_mayor, stock,
       permite_personalizacion, tiempo_fabricacion,
       modelos, archivos
     } = payload;
 
     const producto = await Productos.create({
-      nombre, descripcion, categoria_id, genero_id,
+      nombre, descripcion, categoria_id, genero_id, tipo_bota_id,
       precio, precio_mayor, stock: stock || 0,
       permite_personalizacion: permite_personalizacion === 'true' || permite_personalizacion === true,
       tiempo_fabricacion

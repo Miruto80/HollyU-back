@@ -18,7 +18,8 @@ import {
   Tipos_venta,
   Metodos_pago, 
   Estados_pago,
-  Estados_produccion
+  Estados_produccion,
+  Tipo_bota
 } from './models/index.js';
 
 import bcrypt from 'bcryptjs';
@@ -76,6 +77,8 @@ const produccionCorte = await createOrFind(Estados_produccion, { nombre: 'Corte'
 const produccionCostura = await createOrFind(Estados_produccion, { nombre: 'Costura' }, { orden: 2 });
 const produccionCalidad = await createOrFind(Estados_produccion, { nombre: 'Control de calidad' }, { orden: 3 });
 const produccionTerminado = await createOrFind(Estados_produccion, { nombre: 'Terminado' }, { orden: 4 });
+
+const botaJogger = await createOrFind(Tipo_bota, { nombre: 'Jogger' });
 
 const metodoPagoMovil = await createOrFind(Metodos_pago, { nombre: 'Pago móvil' });
 const metodoTransferencia = await createOrFind(Metodos_pago, { nombre: 'Transferencia' });
@@ -166,6 +169,10 @@ const tipoVentaFisico = await createOrFind(Tipos_venta, { nombre: 'Fisico' });
     activo: true
   }
 );
+
+if (!pijamaEnfermeria.tipo_bota_id) {
+  await pijamaEnfermeria.update({ tipo_bota_id: botaJogger.id });
+}
 
 await createOrFind(
 Producto_imagenes,

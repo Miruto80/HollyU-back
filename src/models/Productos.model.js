@@ -5,6 +5,7 @@ export const Productos = sequelize.define('Productos', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   categoria_id: { type: DataTypes.INTEGER, allowNull: false },
   genero_id: { type: DataTypes.INTEGER },
+  tipo_bota_id: { type: DataTypes.INTEGER },
   nombre: { type: DataTypes.STRING(200), allowNull: false },
   descripcion: { type: DataTypes.TEXT },
   precio: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
@@ -18,13 +19,16 @@ export const Productos = sequelize.define('Productos', {
 }, { tableName: 'productos', timestamps: false });
 
 export const associateProductos = () => {
-  const { Categorias, Generos, Modelos, Producto_imagenes, Detalle_cotizacion } = sequelize.models;
+  const { Categorias, Generos, Tipo_bota, Modelos, Producto_imagenes, Detalle_cotizacion } = sequelize.models;
 
   Productos.belongsTo(Categorias, { foreignKey: 'categoria_id' });
   Categorias.hasMany(Productos, { foreignKey: 'categoria_id' });
 
   Productos.belongsTo(Generos, { foreignKey: 'genero_id' });
   Generos.hasMany(Productos, { foreignKey: 'genero_id' });
+
+  Productos.belongsTo(Tipo_bota, { foreignKey: 'tipo_bota_id' });
+  Tipo_bota.hasMany(Productos, { foreignKey: 'tipo_bota_id' });
 
   Productos.hasMany(Producto_imagenes, { foreignKey: 'producto_id' });
   Producto_imagenes.belongsTo(Productos, { foreignKey: 'producto_id' });
