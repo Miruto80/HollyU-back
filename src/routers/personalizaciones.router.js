@@ -1,5 +1,5 @@
 import express from 'express';
-import { upload } from '../middlewares/uploadFile.middleware.js';
+import { upload } from '../middlewares/uploadImage.middleware.js';
 import {
 	cotizarPersonalizacionController,
 	getPersonalizacionesController,

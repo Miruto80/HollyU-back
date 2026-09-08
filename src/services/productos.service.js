@@ -105,11 +105,11 @@ export const postProducto = async (payload) => {
   const t = await sequelize.transaction();
 
   try {
-     const {
+    const {
       codigo, nombre, descripcion, categoria_id, genero_id,
       precio, precio_mayor, stock,
       permite_personalizacion, tiempo_fabricacion,
-      modelos, archivo
+      modelos, archivos
     } = payload;
 
     const producto = await Productos.create({
@@ -119,24 +119,27 @@ export const postProducto = async (payload) => {
       tiempo_fabricacion
     }, { transaction: t });
 
-    if (archivo) {
+    if (archivos && archivos.length > 0) {
       const destFolder = path.join('uploads', 'products');
       if (!fs.existsSync(destFolder)) {
         fs.mkdirSync(destFolder, { recursive: true });
       }
 
-      const destPath = path.join(destFolder, archivo.filename);
-      fs.renameSync(archivo.path, destPath);
+      for (let i = 0; i < archivos.length; i++) {
+        const archivo = archivos[i];
+        const destPath = path.join(destFolder, archivo.filename);
+        fs.renameSync(archivo.path, destPath);
 
-      await Producto_imagenes.create({
-        producto_id: producto.id,
-        imagen: `/uploads/products/${archivo.filename}`,
-        principal: true,
-        orden: 1
-      }, { transaction: t });
+        await Producto_imagenes.create({
+          producto_id: producto.id,
+          imagen: `/uploads/products/${archivo.filename}`,
+          principal: i === 0, // la primera que suban queda como principal
+          orden: i + 1
+        }, { transaction: t });
+      }
     }
 
-   for (const m of modelos) {
+    for (const m of modelos) {
       const modelo = await Modelos.create({
         producto_id: producto.id,
         nombre: m.nombre,
@@ -170,7 +173,9 @@ export const postProducto = async (payload) => {
 
   } catch (error) {
     await t.rollback();
-    if (payload.archivo) fs.unlink(payload.archivo.path, () => {});
+    if (payload.archivos) {
+      payload.archivos.forEach(a => fs.unlink(a.path, () => {}));
+    }
     console.error(error);
     throw error;
   }

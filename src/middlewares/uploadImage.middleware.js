@@ -11,9 +11,12 @@ const storage = multer.diskStorage({
     cb(null, folderPath);
   },
   filename: (req, file, cb) => {
-    const nombrePersonalizado = req.body.nombreArchivo || file.originalname;
-    const nombreFinal = nombrePersonalizado.replace(/\s+/g, "_");
-    cb(null, nombreFinal);
+    const base = (req.body.nombreArchivo || file.originalname)
+      .replace(/\s+/g, "_")
+      .replace(path.extname(file.originalname), ""); 
+    const ext = path.extname(file.originalname);
+    const uniqueSuffix = `${Date.now()}_${Math.round(Math.random() * 1e9)}`;
+    cb(null, `${base}_${uniqueSuffix}${ext}`);
   },
 });
 
@@ -32,5 +35,5 @@ const fileFilter = (req, file, cb) => {
 export const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB máximo
+  limits: { fileSize: 5 * 1024 * 1024 }
 });

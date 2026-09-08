@@ -1,5 +1,5 @@
 import express from "express";
-import { upload } from '../middlewares/uploadFile.middleware.js';
+import { upload } from '../middlewares/uploadImage.middleware.js';
 
 import { getPedidosController, getPedidosByClienteController, getPedidoByIdController, postPedidoController, putPagoEstadoController, avanzarEstadoPedidoController } from "../controllers/pedidos.controller.js";
 
