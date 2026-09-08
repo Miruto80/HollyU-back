@@ -5,7 +5,6 @@ export const Productos = sequelize.define('Productos', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   categoria_id: { type: DataTypes.INTEGER, allowNull: false },
   genero_id: { type: DataTypes.INTEGER },
-  codigo: { type: DataTypes.STRING(50), allowNull: false, unique: true },
   nombre: { type: DataTypes.STRING(200), allowNull: false },
   descripcion: { type: DataTypes.TEXT },
   precio: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },

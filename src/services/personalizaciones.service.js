@@ -30,7 +30,7 @@ export const getPersonalizaciones = async (filters = {}) => {
         { model: Clientes, attributes: ['id', 'nombres', 'apellidos', 'email'] },
         {
           model: Productos,
-          attributes: ['id', 'codigo', 'nombre', 'precio'],
+          attributes: ['id', 'nombre', 'precio'],
           include: [{ model: Producto_imagenes, attributes: ['imagen'] }]
         }
       ],

@@ -21,7 +21,7 @@ export const getCotizaciones = async () => {
       {
         model: Detalle_cotizacion,
         attributes: ['id', 'cantidad', 'precio'],
-        include: [{ model: Productos, attributes: ['id', 'codigo', 'nombre'] }]
+        include: [{ model: Productos, attributes: ['id', 'nombre'] }]
       }
     ],
     order: [['fecha', 'DESC']]

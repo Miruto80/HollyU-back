@@ -153,7 +153,7 @@ const tipoVentaFisico = await createOrFind(Tipos_venta, { nombre: 'Fisico' });
 
     const pijamaEnfermeria = await createOrFind(
   Productos,
-  { codigo: 'ENF-001' },
+  { nombre: 'Pijama quirúrgica antifluido' },
   {
     categoria_id: categoriaEnfermeria.id,
     genero_id: generoUnisex.id,

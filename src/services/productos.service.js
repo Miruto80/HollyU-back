@@ -36,7 +36,7 @@ export const getProductos = async (filters = {}) => {
      return await Productos.findAll({
       where,
       attributes: [
-        'id', 'codigo', 'nombre', 'activo', 'precio', 'precio_mayor',
+        'id', 'nombre', 'activo', 'precio', 'precio_mayor',
         'permite_personalizacion', 'tiempo_fabricacion', 'created_at'
       ],
       include: [
@@ -106,14 +106,14 @@ export const postProducto = async (payload) => {
 
   try {
     const {
-      codigo, nombre, descripcion, categoria_id, genero_id,
+      nombre, descripcion, categoria_id, genero_id,
       precio, precio_mayor, stock,
       permite_personalizacion, tiempo_fabricacion,
       modelos, archivos
     } = payload;
 
     const producto = await Productos.create({
-      codigo, nombre, descripcion, categoria_id, genero_id,
+      nombre, descripcion, categoria_id, genero_id,
       precio, precio_mayor, stock: stock || 0,
       permite_personalizacion: permite_personalizacion === 'true' || permite_personalizacion === true,
       tiempo_fabricacion

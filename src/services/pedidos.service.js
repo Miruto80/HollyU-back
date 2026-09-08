@@ -71,7 +71,7 @@ export const getPedidoById = async (id) => {
         {
           model: Detalle_pedido,
           include: [
-            { model: Productos, attributes: ['id', 'codigo', 'nombre'] },
+            { model: Productos, attributes: ['id', 'nombre'] },
             { model: Modelos, attributes: ['id', 'nombre'] },
             { model: Tipos_tela, attributes: ['id', 'nombre'] },
             { model: Colores, attributes: ['id', 'nombre', 'codigo_hex'] },

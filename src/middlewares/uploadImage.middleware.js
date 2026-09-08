@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
     cb(null, folderPath);
   },
   filename: (req, file, cb) => {
-    const base = (req.body.nombreArchivo || file.originalname)
+    const base = file.originalname
       .replace(/\s+/g, "_")
       .replace(path.extname(file.originalname), ""); 
     const ext = path.extname(file.originalname);
