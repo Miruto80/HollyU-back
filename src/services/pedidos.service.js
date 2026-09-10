@@ -103,6 +103,14 @@ export const postPedido = async (payload) => {
       tipo_venta_id,
       estado_pedido_id,
       total_bs,
+      metodo_entrega,
+      agencia_envio,
+      sucursal_envio,
+      servicio_delivery,
+      zona_entrega,
+      parroquia_entrega,
+      sector_entrega,
+      direccion_entrega,
       observaciones,
       items, // [{ producto_id, modelo_id, tipo_tela_id, color_id, talla_id, cantidad, precio, descuento }]
 
@@ -163,6 +171,14 @@ export const postPedido = async (payload) => {
       total,
       total_bs,
       fecha_entrega_estimada: fechaEntregaEstimada,
+      metodo_entrega,
+      agencia_envio,
+      sucursal_envio,
+      servicio_delivery,
+      zona_entrega,
+      parroquia_entrega,
+      sector_entrega,
+      direccion_entrega,
       observaciones
     }, { transaction: t });
 

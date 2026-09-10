@@ -166,8 +166,8 @@ const tipoVentaFisico = await createOrFind(Tipos_venta, { nombre: 'Fisico' });
     genero_id: generoUnisex.id,
     nombre: 'Pijama quirúrgica antifluido',
     descripcion: 'Conjunto médico antifluido para enfermería y personal de salud',
-    precio: 95000,
-    precio_mayor: 85000,
+    precio: 30,
+    precio_mayor: 25,
     permite_personalizacion: true,
     tiempo_fabricacion: 7,
     activo: true

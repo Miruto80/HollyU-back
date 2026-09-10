@@ -12,7 +12,16 @@ export const Pedidos = sequelize.define('Pedidos', {
   descuento: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
   total: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
   total_bs: { type: DataTypes.DECIMAL(14, 2) },
-  fecha_entrega_estimada: { type: DataTypes.DATE },  observaciones: { type: DataTypes.TEXT },
+  fecha_entrega_estimada: { type: DataTypes.DATE },
+  metodo_entrega: { type: DataTypes.STRING(30) },
+  agencia_envio: { type: DataTypes.STRING(80) },
+  sucursal_envio: { type: DataTypes.STRING(160) },
+  servicio_delivery: { type: DataTypes.STRING(120) },
+  zona_entrega: { type: DataTypes.STRING(80) },
+  parroquia_entrega: { type: DataTypes.STRING(80) },
+  sector_entrega: { type: DataTypes.STRING(120) },
+  direccion_entrega: { type: DataTypes.TEXT },
+  observaciones: { type: DataTypes.TEXT },
   fecha: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'pedidos', timestamps: false });
 
