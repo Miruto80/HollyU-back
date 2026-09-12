@@ -92,6 +92,8 @@ const estadoPagoPendiente = await createOrFind(Estados_pago, { nombre: 'Pendient
 const estadoPagoVerificado = await createOrFind(Estados_pago, { nombre: 'Verificado' });
 const estadoPagoRechazado = await createOrFind(Estados_pago, { nombre: 'Rechazado' });
 
+const tipoVentaPresencial = await createOrFind(Tipos_venta, { nombre: 'Presencial' });
+
 const estadoPendiente = await createOrFind(Estados_pedido, { nombre: 'Pendiente' }, { color: '#ffc107' });
 const estadoEnProduccion = await createOrFind(Estados_pedido, { nombre: 'En producción' }, { color: '#0d6efd' });
 const estadoListo = await createOrFind(Estados_pedido, { nombre: 'Listo para entrega' }, { color: '#20c997' });

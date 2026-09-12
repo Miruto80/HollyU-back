@@ -21,16 +21,20 @@ import {
 const ESTADO_PAGO_VERIFICADO = 2;
 const ESTADO_PAGO_RECHAZADO = 3;
 
+const ESTADO_PEDIDO_INICIAL = 1;
 const ESTADO_PEDIDO_EN_PRODUCCION = 2;
 const ESTADO_PEDIDO_LISTO_ENTREGA = 3;
 const ESTADO_PEDIDO_CANCELADO = 5;
 
-const ESTADO_PRODUCCION_INICIAL = 1; 
+const ESTADO_PRODUCCION_INICIAL = 1;
+
+const TIPO_VENTA_PRESENCIAL = 3; // ajustar según tu seed real
 
 export const getPedidos = async (filters = {}) => {
   try {
     const where = {};
     if (filters.cliente_id) where.cliente_id = filters.cliente_id;
+    if (filters.tipo_venta_id) where.tipo_venta_id = filters.tipo_venta_id;
 
     return await Pedidos.findAll({
       where,
@@ -40,8 +44,11 @@ export const getPedidos = async (filters = {}) => {
         { model: Tipos_venta, attributes: ['id', 'nombre'] },
         {
           model: Pagos,
-          attributes: ['id', 'referencia', 'estado_pago_id'],
-          include: [{ model: Estados_pago, attributes: ['id', 'nombre'] }]
+          attributes: ['id', 'referencia', 'estado_pago_id', 'metodo_pago_id'],
+          include: [
+            { model: Estados_pago, attributes: ['id', 'nombre'] },
+            { model: Metodos_pago, attributes: ['id', 'nombre'] }
+          ]
         }
       ],
       order: [['fecha', 'DESC']]
@@ -93,6 +100,56 @@ export const getPedidoById = async (id) => {
   }
 };
 
+// Lógica compartida: descuenta stock de lo que haya, y decide si el pedido
+// necesita pasar a producción o queda listo para entrega.
+const procesarStockYProduccion = async (pedidoId, t) => {
+  const detalle = await Detalle_pedido.findAll({
+    where: { pedido_id: pedidoId },
+    include: [{ model: Productos, attributes: ['id', 'stock'] }],
+    transaction: t
+  });
+
+  const lineasSinStock = [];
+
+  for (const item of detalle) {
+    if (!item.Producto) continue;
+
+    if (item.Producto.stock >= item.cantidad) {
+      await Productos.decrement('stock', {
+        by: item.cantidad,
+        where: { id: item.Producto.id },
+        transaction: t
+      });
+    } else {
+      lineasSinStock.push(item);
+    }
+  }
+
+  const necesitaProduccion = lineasSinStock.length > 0;
+
+  if (necesitaProduccion) {
+    await Pedidos.update(
+      { estado_pedido_id: ESTADO_PEDIDO_EN_PRODUCCION },
+      { where: { id: pedidoId }, transaction: t }
+    );
+
+    for (const item of lineasSinStock) {
+      await Producciones.create({
+        pedido_id: pedidoId,
+        estado_produccion_id: ESTADO_PRODUCCION_INICIAL,
+        fecha_inicio: new Date()
+      }, { transaction: t });
+    }
+  } else {
+    await Pedidos.update(
+      { estado_pedido_id: ESTADO_PEDIDO_LISTO_ENTREGA },
+      { where: { id: pedidoId }, transaction: t }
+    );
+  }
+
+  return necesitaProduccion;
+};
+
 export const postPedido = async (payload) => {
   const t = await sequelize.transaction();
 
@@ -112,32 +169,28 @@ export const postPedido = async (payload) => {
       sector_entrega,
       direccion_entrega,
       observaciones,
-      items, // [{ producto_id, modelo_id, tipo_tela_id, color_id, talla_id, cantidad, precio, descuento }]
+      items,
 
-      // datos del pago
       metodo_pago_id,
       estado_pago_id,
       referencia,
       banco_origen,
       banco_destino,
       telefono_emisor,
-      archivo // req.file del comprobante
+      archivo
     } = payload;
 
     if (!items || items.length === 0) {
       throw new Error('El pedido debe tener al menos un producto');
     }
 
-    // Cada línea debe identificar el producto y sus opciones del catálogo.
     for (const item of items) {
       const esNormal = Boolean(item.producto_id && item.modelo_id && item.tipo_tela_id && item.talla_id);
-
       if (!esNormal) {
         throw new Error('Cada producto del pedido debe tener producto_id/modelo_id/tipo_tela_id/talla_id');
       }
     }
 
-    // Calcular subtotal y descuento
     let subtotal = 0;
     let descuentoTotal = 0;
     for (const item of items) {
@@ -146,7 +199,6 @@ export const postPedido = async (payload) => {
     }
     const total = subtotal - descuentoTotal;
 
-    // Fecha de entrega estimada = la más larga entre los productos del pedido
     let maxTiempoFabricacion = 7;
     const productosIds = items.filter(i => i.producto_id).map(i => i.producto_id);
     if (productosIds.length > 0) {
@@ -160,7 +212,6 @@ export const postPedido = async (payload) => {
     const fechaEntregaEstimada = new Date();
     fechaEntregaEstimada.setDate(fechaEntregaEstimada.getDate() + maxTiempoFabricacion);
 
-    // Crear el pedido
     const pedido = await Pedidos.create({
       cliente_id,
       usuario_id: usuario_id || null,
@@ -182,7 +233,6 @@ export const postPedido = async (payload) => {
       observaciones
     }, { transaction: t });
 
-    // Crear cada línea del detalle
     for (const item of items) {
       await Detalle_pedido.create({
         pedido_id: pedido.id,
@@ -197,7 +247,6 @@ export const postPedido = async (payload) => {
       }, { transaction: t });
     }
 
-    // Mover el comprobante de tmp a su carpeta final
     let comprobantePath = null;
     if (archivo) {
       const destFolder = path.join('uploads', 'pagos');
@@ -209,7 +258,6 @@ export const postPedido = async (payload) => {
       comprobantePath = `/uploads/pagos/${archivo.filename}`;
     }
 
-    // Crear el pago asociado
     await Pagos.create({
       pedido_id: pedido.id,
       metodo_pago_id,
@@ -232,7 +280,6 @@ export const postPedido = async (payload) => {
     throw error;
   }
 };
-
 
 export const putPagoEstado = async (pedidoId, estadoPagoId) => {
   const t = await sequelize.transaction();
@@ -257,51 +304,8 @@ export const putPagoEstado = async (pedidoId, estadoPagoId) => {
       await t.commit();
       return getPedidoById(pedidoId);
     }
-    // Si el pago fue verificado, revisar stock y actualizar estado del pedido
-    const detalle = await Detalle_pedido.findAll({
-      where: { pedido_id: pedidoId },
-      include: [{ model: Productos, attributes: ['id', 'stock'] }],
-      transaction: t
-    });
 
-    const lineasSinStock = [];
-
-    for (const item of detalle) {
-      if (!item.Producto) continue; // pedido personalizado, sin producto_id directo
-
-      if (item.Producto.stock >= item.cantidad) {
-        // Hay stock suficiente: se descuenta
-        await Productos.decrement('stock', {
-          by: item.cantidad,
-          where: { id: item.Producto.id },
-          transaction: t
-        });
-      } else {
-        lineasSinStock.push(item);
-      }
-    }
-
-    const necesitaProduccion = lineasSinStock.length > 0;
-
-    if (necesitaProduccion) {
-      await Pedidos.update(
-        { estado_pedido_id: ESTADO_PEDIDO_EN_PRODUCCION },
-        { where: { id: pedidoId }, transaction: t }
-      );
-
-      for (const item of lineasSinStock) {
-        await Producciones.create({
-          pedido_id: pedidoId,
-          estado_produccion_id: ESTADO_PRODUCCION_INICIAL,
-          fecha_inicio: new Date()
-        }, { transaction: t });
-      }
-    } else {
-      await Pedidos.update(
-        { estado_pedido_id: ESTADO_PEDIDO_LISTO_ENTREGA },
-        { where: { id: pedidoId }, transaction: t }
-      );
-    }
+    await procesarStockYProduccion(pedidoId, t);
 
     await t.commit();
     return getPedidoById(pedidoId);
@@ -342,4 +346,99 @@ export const avanzarEstadoPedido = async (pedidoId) => {
 
   await pedido.update({ estado_pedido_id: estado.id });
   return getPedidoById(pedidoId);
+};
+
+export const createVentaPresencial = async (payload) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const { cliente_id, items, pagos, observaciones } = payload;
+
+    if (!cliente_id) throw new Error('cliente_id es requerido');
+    if (!items || items.length === 0) throw new Error('La venta debe tener al menos un producto');
+    if (!pagos || pagos.length === 0) throw new Error('La venta debe tener al menos un método de pago');
+
+    for (const item of items) {
+      const esNormal = Boolean(item.producto_id && item.modelo_id && item.tipo_tela_id && item.talla_id);
+      if (!esNormal) {
+        throw new Error('Cada producto debe tener producto_id/modelo_id/tipo_tela_id/talla_id');
+      }
+    }
+
+    let subtotal = 0;
+    let descuentoTotal = 0;
+    for (const item of items) {
+      subtotal += item.precio * item.cantidad;
+      descuentoTotal += item.descuento || 0;
+    }
+    const total = subtotal - descuentoTotal;
+
+    const totalPagado = pagos.reduce((sum, p) => sum + Number(p.monto), 0);
+
+    if (Math.abs(totalPagado - total) > 0.01) {
+      throw new Error(`La suma de los pagos (${totalPagado}) no coincide con el total de la venta (${total})`);
+    }
+
+    let maxTiempoFabricacion = 7;
+    const productosIds = items.filter(i => i.producto_id).map(i => i.producto_id);
+    if (productosIds.length > 0) {
+      const productos = await Productos.findAll({
+        where: { id: productosIds },
+        attributes: ['id', 'tiempo_fabricacion']
+      });
+      maxTiempoFabricacion = Math.max(...productos.map(p => p.tiempo_fabricacion || 7), 7);
+    }
+    const fechaEntregaEstimada = new Date();
+    fechaEntregaEstimada.setDate(fechaEntregaEstimada.getDate() + maxTiempoFabricacion);
+
+    const pedido = await Pedidos.create({
+      cliente_id,
+      tipo_venta_id: TIPO_VENTA_PRESENCIAL,
+      estado_pedido_id: ESTADO_PEDIDO_INICIAL,
+      subtotal,
+      descuento: descuentoTotal,
+      total,
+      total_bs: null,
+      fecha_entrega_estimada: fechaEntregaEstimada,
+      metodo_entrega: 'Retiro en tienda',
+      observaciones
+    }, { transaction: t });
+
+    for (const item of items) {
+      await Detalle_pedido.create({
+        pedido_id: pedido.id,
+        producto_id: item.producto_id,
+        modelo_id: item.modelo_id,
+        tipo_tela_id: item.tipo_tela_id,
+        color_id: item.color_id || null,
+        talla_id: item.talla_id,
+        cantidad: item.cantidad,
+        precio: item.precio,
+        descuento: item.descuento || 0
+      }, { transaction: t });
+    }
+
+    await procesarStockYProduccion(pedido.id, t);
+
+    for (const p of pagos) {
+      await Pagos.create({
+        pedido_id: pedido.id,
+        metodo_pago_id: p.metodo_pago_id,
+        estado_pago_id: ESTADO_PAGO_VERIFICADO,
+        monto: p.monto,
+        referencia: p.referencia || null,
+        banco_origen: p.banco_origen || null,
+        banco_destino: p.banco_destino || null,
+        telefono_emisor: p.telefono_emisor || null
+      }, { transaction: t });
+    }
+
+    await t.commit();
+    return getPedidoById(pedido.id);
+
+  } catch (error) {
+    await t.rollback();
+    console.error('Error creating venta presencial:', error);
+    throw error;
+  }
 };

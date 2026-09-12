@@ -1,13 +1,13 @@
-import { getPedidos, getPedidosByCliente, getPedidoById, postPedido, putPagoEstado, avanzarEstadoPedido } from '../services/pedidos.service.js';
+import { getPedidos, getPedidosByCliente, getPedidoById, postPedido, putPagoEstado, avanzarEstadoPedido, createVentaPresencial } from '../services/pedidos.service.js';
 
 export const getPedidosController = async (req, res) => {
-    try {
-        const pedidos = await getPedidos(req.query);
-        res.json(pedidos);
-    } catch (error) {
-        console.error('Error fetching orders:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+  try {
+    const { tipo_venta_id } = req.query;
+    const pedidos = await getPedidos({ tipo_venta_id });
+    res.json(pedidos);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 export const getPedidosByClienteController = async (req, res) => {
@@ -78,6 +78,16 @@ export const avanzarEstadoPedidoController = async (req, res) => {
     const pedido = await avanzarEstadoPedido(req.params.id);
     res.json(pedido);
   } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const postVentaPresencialController = async (req, res) => {
+  try {
+    const venta = await createVentaPresencial(req.body);
+    res.status(201).json(venta);
+  } catch (error) {
+    console.error(error);
     res.status(400).json({ message: error.message });
   }
 };
