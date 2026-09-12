@@ -15,7 +15,8 @@ import {
   Tallas,
   Categorias,
   Generos,
-  Tipo_bota
+  Tipo_bota,
+  Producto_tipo_bota
 } from '../models/index.js';
 
 export const getProductos = async (filters = {}) => {
@@ -44,6 +45,7 @@ export const getProductos = async (filters = {}) => {
         { model: Categorias, attributes: ['id', 'nombre'] },
         { model: Generos, attributes: ['id', 'nombre'] },
         { model: Tipo_bota, attributes: ['id', 'nombre'], required: false },
+        { model: Tipo_bota, as: 'Tipos_bota', attributes: ['id', 'nombre'], through: { attributes: [] } },
         {
           model: Producto_imagenes,
           attributes: ['imagen'],
@@ -62,6 +64,12 @@ export const getProductoById = async (id) => {
   try {
     return await Productos.findByPk(id, {
       include: [
+        {
+          model: Tipo_bota,
+          as: 'Tipos_bota',
+          attributes: ['id', 'nombre'],
+          through: { attributes: [] }
+        },
         {
           model: Producto_imagenes
         },
@@ -108,7 +116,7 @@ export const postProducto = async (payload) => {
 
   try {
     const {
-      nombre, descripcion, categoria_id, genero_id, tipo_bota_id,
+      nombre, descripcion, categoria_id, genero_id, tipo_bota_id, tipo_bota_ids,
       precio, precio_mayor, stock,
       permite_personalizacion, tiempo_fabricacion,
       modelos, archivos
@@ -120,6 +128,14 @@ export const postProducto = async (payload) => {
       permite_personalizacion: permite_personalizacion === 'true' || permite_personalizacion === true,
       tiempo_fabricacion
     }, { transaction: t });
+
+    const tiposBota = tipo_bota_ids?.length ? tipo_bota_ids : (tipo_bota_id ? [tipo_bota_id] : []);
+    for (const tipoBotaId of tiposBota) {
+      await Producto_tipo_bota.create({
+        producto_id: producto.id,
+        tipo_bota_id: tipoBotaId
+      }, { transaction: t });
+    }
 
     if (archivos && archivos.length > 0) {
       const destFolder = path.join('uploads', 'products');

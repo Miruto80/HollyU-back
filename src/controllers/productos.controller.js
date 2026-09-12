@@ -26,6 +26,7 @@ export const postProductoController = async (req, res) => {
         const payload = {
             ...req.body,
             modelos: JSON.parse(req.body.modelos),
+            tipo_bota_ids: req.body.tipo_bota_ids ? JSON.parse(req.body.tipo_bota_ids) : [],
             archivos: req.files
         };
 

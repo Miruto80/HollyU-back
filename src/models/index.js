@@ -34,6 +34,7 @@ import { Usuarios, associateUsuarios } from './Usuarios.model.js';
 import { Tipos_descuento, associateTipos_descuento } from './Tipos_descuento.model.js';
 import { Descuentos, associateDescuentos } from './Descuentos.model.js';
 import { Producto_descuentos, associateProducto_descuentos } from './Producto_descuentos.model.js';
+import { Producto_tipo_bota, associateProducto_tipo_bota } from './Producto_tipo_bota.model.js';
 
 export const associateAllModels = (models = sequelize.models) => {
   associateCategorias(models);
@@ -71,6 +72,7 @@ export const associateAllModels = (models = sequelize.models) => {
   associateTipos_descuento(models);
   associateDescuentos(models);
   associateProducto_descuentos(models);
+  associateProducto_tipo_bota(models);
 };
 
 export {
@@ -108,5 +110,6 @@ export {
   Usuarios,
   Tipos_descuento,
   Descuentos,
-  Producto_descuentos
+  Producto_descuentos,
+  Producto_tipo_bota
 };
