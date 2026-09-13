@@ -1,4 +1,4 @@
-import {getProductos, getProductoById, postProducto} from '../services/productos.service.js';
+import {getProductos, getProductoById, postProducto, putProducto, deleteProducto, cambiarEstatusProducto} from '../services/productos.service.js';
 
 export const getProductosController = async (req, res) => {
     try {
@@ -36,4 +36,39 @@ export const postProductoController = async (req, res) => {
         console.error(error);
         res.status(400).json({ message: error.message });
     }
+};
+
+export const putProductoController = async (req, res) => {
+  try {
+    const payload = {
+      ...req.body,
+      tipo_bota_ids: req.body.tipo_bota_ids ? JSON.parse(req.body.tipo_bota_ids) : undefined,
+      archivos: req.files
+    };
+
+    const producto = await putProducto(req.params.id, payload);
+    res.json(producto);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteProductoController = async (req, res) => {
+  try {
+    const resultado = await deleteProducto(req.params.id);
+    res.json(resultado);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const patchEstatusProductoController = async (req, res) => {
+  try {
+    const { estatus } = req.body;
+    const producto = await cambiarEstatusProducto(req.params.id, estatus);
+    res.json(producto);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 };

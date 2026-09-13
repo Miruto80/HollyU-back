@@ -175,7 +175,7 @@ const tipoVentaFisico = await createOrFind(Tipos_venta, { nombre: 'Fisico' });
     precio_mayor: 25,
     permite_personalizacion: true,
     tiempo_fabricacion: 7,
-    activo: true
+    estatus: 1
   }
 );
 

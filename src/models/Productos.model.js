@@ -13,7 +13,7 @@ export const Productos = sequelize.define('Productos', {
   stock: { type: DataTypes.INTEGER, defaultValue: 0 },
   permite_personalizacion: { type: DataTypes.BOOLEAN, defaultValue: true },
   tiempo_fabricacion: { type: DataTypes.INTEGER, defaultValue: 7 },
-  activo: { type: DataTypes.BOOLEAN, defaultValue: true },
+  estatus: { type: DataTypes.INTEGER, defaultValue: 1 }, // 0=eliminado, 1=activo, 2=desactivado
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'productos', timestamps: false });

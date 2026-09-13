@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
+import { Op } from 'sequelize';
 import sequelize from '../database/db.js';
-
 
 import { 
   Productos,
@@ -19,26 +19,22 @@ import {
   Producto_tipo_bota
 } from '../models/index.js';
 
+const ESTATUS_ELIMINADO = 0;
+const ESTATUS_ACTIVO = 1;
+const ESTATUS_DESACTIVADO = 2;
+
 export const getProductos = async (filters = {}) => {
   try {
-    const where = {};
+    const where = { estatus: { [Op.ne]: ESTATUS_ELIMINADO } }; // nunca mostrar eliminados
 
-    if (filters.categoria_id) {
-      where.categoria_id = filters.categoria_id;
-    }
+    if (filters.categoria_id) where.categoria_id = filters.categoria_id;
+    if (filters.genero_id) where.genero_id = filters.genero_id;
+    if (filters.estatus !== undefined) where.estatus = Number(filters.estatus);
 
-    if (filters.genero_id) {
-      where.genero_id = filters.genero_id;
-    }
-
-    if (filters.activo !== undefined) {
-      where.activo = filters.activo === 'true' || filters.activo === true;
-    }
-
-     return await Productos.findAll({
+    return await Productos.findAll({
       where,
       attributes: [
-        'id', 'tipo_bota_id', 'nombre', 'activo', 'precio', 'precio_mayor',
+        'id', 'tipo_bota_id', 'nombre', 'estatus', 'precio', 'precio_mayor',
         'permite_personalizacion', 'tiempo_fabricacion', 'created_at'
       ],
       include: [
@@ -70,36 +66,23 @@ export const getProductoById = async (id) => {
           attributes: ['id', 'nombre'],
           through: { attributes: [] }
         },
-        {
-          model: Producto_imagenes
-        },
+        { model: Producto_imagenes },
         {
           model: Modelos,
           include: [
             {
               model: Modelo_telas,
               include: [
-                {
-                  model: Tipos_tela
-                },
+                { model: Tipos_tela },
                 {
                   model: Modelo_telas_colores,
-                  include: [
-                    {
-                      model: Colores,
-                      as: 'color'
-                    }
-                  ]
+                  include: [{ model: Colores, as: 'color' }]
                 }
               ]
             },
             {
               model: Modelo_tallas,
-              include: [
-                {
-                  model: Tallas
-                }
-              ]
+              include: [{ model: Tallas }]
             }
           ]
         }
@@ -126,7 +109,8 @@ export const postProducto = async (payload) => {
       nombre, descripcion, categoria_id, genero_id, tipo_bota_id,
       precio, precio_mayor, stock: stock || 0,
       permite_personalizacion: permite_personalizacion === 'true' || permite_personalizacion === true,
-      tiempo_fabricacion
+      tiempo_fabricacion,
+      estatus: ESTATUS_ACTIVO
     }, { transaction: t });
 
     const tiposBota = tipo_bota_ids?.length ? tipo_bota_ids : (tipo_bota_id ? [tipo_bota_id] : []);
@@ -151,7 +135,7 @@ export const postProducto = async (payload) => {
         await Producto_imagenes.create({
           producto_id: producto.id,
           imagen: `/uploads/products/${archivo.filename}`,
-          principal: i === 0, // la primera que suban queda como principal
+          principal: i === 0,
           orden: i + 1
         }, { transaction: t });
       }
@@ -197,4 +181,100 @@ export const postProducto = async (payload) => {
     console.error(error);
     throw error;
   }
+};
+
+export const putProducto = async (id, payload) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const producto = await Productos.findByPk(id, { transaction: t });
+    if (!producto) throw new Error('Producto no encontrado');
+
+    const {
+      nombre, descripcion, categoria_id, genero_id,
+      tipo_bota_ids,
+      precio, precio_mayor, stock,
+      permite_personalizacion, tiempo_fabricacion,
+      archivos
+    } = payload;
+
+    await producto.update({
+      nombre, descripcion, categoria_id, genero_id,
+      precio, precio_mayor, stock,
+      permite_personalizacion: permite_personalizacion === 'true' || permite_personalizacion === true,
+      tiempo_fabricacion,
+      updated_at: new Date()
+    }, { transaction: t });
+
+    if (tipo_bota_ids) {
+      await Producto_tipo_bota.destroy({ where: { producto_id: id }, transaction: t });
+      for (const tipoBotaId of tipo_bota_ids) {
+        await Producto_tipo_bota.create({
+          producto_id: id,
+          tipo_bota_id: tipoBotaId
+        }, { transaction: t });
+      }
+    }
+
+    if (archivos && archivos.length > 0) {
+      const destFolder = path.join('uploads', 'products');
+      if (!fs.existsSync(destFolder)) {
+        fs.mkdirSync(destFolder, { recursive: true });
+      }
+
+      const existentes = await Producto_imagenes.count({ where: { producto_id: id }, transaction: t });
+
+      for (let i = 0; i < archivos.length; i++) {
+        const archivo = archivos[i];
+        const destPath = path.join(destFolder, archivo.filename);
+        fs.renameSync(archivo.path, destPath);
+
+        await Producto_imagenes.create({
+          producto_id: id,
+          imagen: `/uploads/products/${archivo.filename}`,
+          principal: existentes === 0 && i === 0,
+          orden: existentes + i + 1
+        }, { transaction: t });
+      }
+    }
+
+    await t.commit();
+    return getProductoById(id);
+
+  } catch (error) {
+    await t.rollback();
+    if (payload.archivos) {
+      payload.archivos.forEach(a => fs.unlink(a.path, () => {}));
+    }
+    console.error(error);
+    throw error;
+  }
+};
+
+// Borrado lógico: desaparece de todos lados
+export const deleteProducto = async (id) => {
+  const producto = await Productos.findByPk(id);
+  if (!producto) throw new Error('Producto no encontrado');
+
+  await producto.update({ estatus: ESTATUS_ELIMINADO });
+  return { message: 'Producto eliminado correctamente' };
+};
+
+// Cambiar entre Activo y Desactivado (no toca eliminados)
+export const cambiarEstatusProducto = async (id, nuevoEstatus) => {
+  const estatusNum = Number(nuevoEstatus);
+
+  if (![ESTATUS_ACTIVO, ESTATUS_DESACTIVADO].includes(estatusNum)) {
+    throw new Error('Estatus no válido, solo se permite Activo o Desactivado');
+  }
+
+  const producto = await Productos.findByPk(id);
+  if (!producto) throw new Error('Producto no encontrado');
+
+  if (producto.estatus === ESTATUS_ELIMINADO) {
+    throw new Error('No se puede cambiar el estatus de un producto eliminado');
+  }
+
+  await producto.update({ estatus: estatusNum });
+  return getProductoById(id);
 };
