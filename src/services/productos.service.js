@@ -10,6 +10,7 @@ import {
   Modelo_telas,
   Modelo_telas_colores,
   Modelo_tallas,
+  Detalle_pedido,
   Tipos_tela,
   Colores,
   Tallas,
@@ -195,6 +196,7 @@ export const putProducto = async (id, payload) => {
       tipo_bota_ids,
       precio, precio_mayor, stock,
       permite_personalizacion, tiempo_fabricacion,
+      modelos, // opcional: si viene, reemplaza toda la estructura
       archivos
     } = payload;
 
@@ -216,6 +218,72 @@ export const putProducto = async (id, payload) => {
       }
     }
 
+    if (modelos) {
+      const modelosExistentes = await Modelos.findAll({
+        where: { producto_id: id },
+        attributes: ['id'],
+        transaction: t
+      });
+      const modeloIds = modelosExistentes.map(m => m.id);
+
+      if (modeloIds.length > 0) {
+        const pedidosAsociados = await Detalle_pedido.count({
+          where: { modelo_id: modeloIds },
+          transaction: t
+        });
+
+        if (pedidosAsociados > 0) {
+          throw new Error('No se puede editar la estructura de modelos/telas/tallas porque este producto ya tiene pedidos asociados. Desactiva el producto y crea uno nuevo en su lugar.');
+        }
+
+        // Sin pedidos asociados: seguro borrar y recrear
+        const telasExistentes = await Modelo_telas.findAll({
+          where: { modelo_id: modeloIds },
+          attributes: ['id'],
+          transaction: t
+        });
+        const telaIds = telasExistentes.map(t => t.id);
+
+        if (telaIds.length > 0) {
+          await Modelo_telas_colores.destroy({ where: { modelo_tela_id: telaIds }, transaction: t });
+        }
+        await Modelo_tallas.destroy({ where: { modelo_id: modeloIds }, transaction: t });
+        await Modelo_telas.destroy({ where: { modelo_id: modeloIds }, transaction: t });
+        await Modelos.destroy({ where: { producto_id: id }, transaction: t });
+      }
+
+      // Recrear desde cero con los datos nuevos
+      for (const m of modelos) {
+        const modeloNuevo = await Modelos.create({
+          producto_id: id,
+          nombre: m.nombre,
+          descripcion: m.descripcion
+        }, { transaction: t });
+
+        for (const tela of m.telas) {
+          const modeloTela = await Modelo_telas.create({
+            modelo_id: modeloNuevo.id,
+            tipo_tela_id: tela.tipo_tela_id
+          }, { transaction: t });
+
+          for (const colorId of tela.colores) {
+            await Modelo_telas_colores.create({
+              modelo_tela_id: modeloTela.id,
+              color_id: colorId
+            }, { transaction: t });
+          }
+        }
+
+        for (const tallaId of m.tallas) {
+          await Modelo_tallas.create({
+            modelo_id: modeloNuevo.id,
+            talla_id: tallaId
+          }, { transaction: t });
+        }
+      }
+    }
+
+    // Imágenes nuevas: se agregan a las existentes, no las reemplazan
     if (archivos && archivos.length > 0) {
       const destFolder = path.join('uploads', 'products');
       if (!fs.existsSync(destFolder)) {
@@ -251,7 +319,6 @@ export const putProducto = async (id, payload) => {
   }
 };
 
-// Borrado lógico: desaparece de todos lados
 export const deleteProducto = async (id) => {
   const producto = await Productos.findByPk(id);
   if (!producto) throw new Error('Producto no encontrado');

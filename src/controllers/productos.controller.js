@@ -43,6 +43,7 @@ export const putProductoController = async (req, res) => {
     const payload = {
       ...req.body,
       tipo_bota_ids: req.body.tipo_bota_ids ? JSON.parse(req.body.tipo_bota_ids) : undefined,
+      modelos: req.body.modelos ? JSON.parse(req.body.modelos) : undefined,
       archivos: req.files
     };
 
