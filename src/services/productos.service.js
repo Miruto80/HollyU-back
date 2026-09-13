@@ -35,7 +35,7 @@ export const getProductos = async (filters = {}) => {
     return await Productos.findAll({
       where,
       attributes: [
-        'id', 'tipo_bota_id', 'nombre', 'estatus', 'precio', 'precio_mayor',
+        'id', 'tipo_bota_id', 'nombre', 'estatus', 'precio', 'precio_mayor', 'stock',
         'permite_personalizacion', 'tiempo_fabricacion', 'created_at'
       ],
       include: [
