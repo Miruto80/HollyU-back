@@ -61,6 +61,8 @@ export const getProductoById = async (id) => {
   try {
     return await Productos.findByPk(id, {
       include: [
+        { model: Categorias, attributes: ['id', 'nombre'] },
+        { model: Generos, attributes: ['id', 'nombre'] },
         {
           model: Tipo_bota,
           as: 'Tipos_bota',
