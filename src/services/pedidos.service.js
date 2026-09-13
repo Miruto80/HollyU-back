@@ -12,6 +12,7 @@ import {
   Tipos_tela,
   Colores,
   Tallas,
+  Tipo_bota,
   Pagos,
   Metodos_pago,
   Estados_pago,
@@ -83,6 +84,7 @@ export const getPedidoById = async (id) => {
             { model: Tipos_tela, attributes: ['id', 'nombre'] },
             { model: Colores, attributes: ['id', 'nombre', 'codigo_hex'] },
             { model: Tallas, attributes: ['id', 'nombre'] },
+            { model: Tipo_bota, attributes: ['id', 'nombre'] },
           ]
         },
         {
@@ -241,6 +243,7 @@ export const postPedido = async (payload) => {
         tipo_tela_id: item.tipo_tela_id || null,
         color_id: item.color_id || null,
         talla_id: item.talla_id || null,
+        tipo_bota_id: item.tipo_bota_id || null,
         cantidad: item.cantidad,
         precio: item.precio,
         descuento: item.descuento || 0
@@ -412,6 +415,7 @@ export const createVentaPresencial = async (payload) => {
         tipo_tela_id: item.tipo_tela_id,
         color_id: item.color_id || null,
         talla_id: item.talla_id,
+        tipo_bota_id: item.tipo_bota_id || null,
         cantidad: item.cantidad,
         precio: item.precio,
         descuento: item.descuento || 0

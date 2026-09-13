@@ -83,6 +83,9 @@ const tipoDescuentoPorcentaje = await createOrFind(Tipos_descuento, { nombre: 'P
 const tipoDescuentoFijo = await createOrFind(Tipos_descuento, { nombre: 'Monto fijo' });
 
 const botaJogger = await createOrFind(Tipo_bota, { nombre: 'Jogger' });
+const botaRecto = await createOrFind(Tipo_bota, { nombre: 'Recto' });
+const botaCampana = await createOrFind(Tipo_bota, { nombre: 'Campana' });
+const botaAncho = await createOrFind(Tipo_bota, { nombre: 'Ancho' });
 
 const metodoPagoMovil = await createOrFind(Metodos_pago, { nombre: 'Pago móvil' });
 const metodoTransferencia = await createOrFind(Metodos_pago, { nombre: 'Transferencia' });

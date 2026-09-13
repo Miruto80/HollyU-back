@@ -11,6 +11,7 @@ export const Detalle_pedido = sequelize.define('Detalle_pedido', {
   tipo_tela_id: { type: DataTypes.INTEGER },
   color_id: { type: DataTypes.INTEGER },
   talla_id: { type: DataTypes.INTEGER },
+  tipo_bota_id: { type: DataTypes.INTEGER },
 
   cantidad: { type: DataTypes.INTEGER, allowNull: false },
   precio: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
@@ -18,7 +19,7 @@ export const Detalle_pedido = sequelize.define('Detalle_pedido', {
 }, { tableName: 'detalle_pedido', timestamps: false });
 
 export const associateDetalle_pedido = () => {
-  const { Pedidos, Productos, Modelos, Tipos_tela, Colores, Tallas } = sequelize.models;
+  const { Pedidos, Productos, Modelos, Tipos_tela, Colores, Tallas, Tipo_bota } = sequelize.models;
 
   Detalle_pedido.belongsTo(Pedidos, { foreignKey: 'pedido_id' });
   Pedidos.hasMany(Detalle_pedido, { foreignKey: 'pedido_id' });
@@ -37,4 +38,7 @@ export const associateDetalle_pedido = () => {
 
   Detalle_pedido.belongsTo(Tallas, { foreignKey: 'talla_id' });
   Tallas.hasMany(Detalle_pedido, { foreignKey: 'talla_id' });
+
+  Detalle_pedido.belongsTo(Tipo_bota, { foreignKey: 'tipo_bota_id' });
+  Tipo_bota.hasMany(Detalle_pedido, { foreignKey: 'tipo_bota_id' });
 };

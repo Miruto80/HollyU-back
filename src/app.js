@@ -72,6 +72,7 @@ export const connectDatabase = async () => {
     await sequelize.authenticate();
     associateAllModels();
     await sequelize.sync({ force: false });
+    await sequelize.query('ALTER TABLE "detalle_pedido" ADD COLUMN IF NOT EXISTS "tipo_bota_id" INTEGER;');
     console.log('Coneccion establecida correctamente.');
     await seedInitialData();
     console.log('Datos de la semilla creados.');
