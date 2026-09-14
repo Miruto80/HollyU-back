@@ -44,6 +44,10 @@ export const getPedidos = async (filters = {}) => {
         { model: Estados_pedido, attributes: ['id', 'nombre'] },
         { model: Tipos_venta, attributes: ['id', 'nombre'] },
         {
+          model: Detalle_pedido,
+          include: [{ model: Productos, attributes: ['id', 'nombre'] }]
+        },
+        {
           model: Pagos,
           attributes: ['id', 'referencia', 'estado_pago_id', 'metodo_pago_id'],
           include: [
@@ -331,7 +335,8 @@ export const avanzarEstadoPedido = async (pedidoId) => {
   if (!pedido) throw new Error('Pedido no encontrado');
 
   const estadoPago = pedido.Pagos?.[0]?.Estados_pago?.nombre;
-  if (estadoPago !== 'Verificado') {
+  const esPedidoDeCotizacion = Boolean(pedido.cotizacion_id);
+  if (!esPedidoDeCotizacion && estadoPago !== 'Verificado') {
     throw new Error('Solo se puede cambiar el estado de un pedido con pago verificado');
   }
 
