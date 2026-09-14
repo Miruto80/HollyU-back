@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import sequelize from '../database/db.js';
+import { Op } from "sequelize";
 import {
   Pedidos,
   Clientes,
@@ -29,30 +30,65 @@ const ESTADO_PEDIDO_CANCELADO = 5;
 
 const ESTADO_PRODUCCION_INICIAL = 1;
 
-const TIPO_VENTA_PRESENCIAL = 3; // ajustar según tu seed real
+const TIPO_VENTA_PRESENCIAL = 3;
 
 export const getPedidos = async (filters = {}) => {
   try {
     const where = {};
-    if (filters.cliente_id) where.cliente_id = filters.cliente_id;
-    if (filters.tipo_venta_id) where.tipo_venta_id = filters.tipo_venta_id;
+
+    if (filters.cliente_id) {
+      where.cliente_id = filters.cliente_id;
+    }
+
+    if (filters.tipo_venta_id) {
+      where.tipo_venta_id = filters.tipo_venta_id;
+    } else {
+      where.tipo_venta_id = {
+        [Op.ne]: TIPO_VENTA_PRESENCIAL
+      };
+    }
 
     return await Pedidos.findAll({
       where,
       include: [
-        { model: Clientes, attributes: ['id', 'nombres', 'apellidos', 'email', 'telefono'] },
-        { model: Estados_pedido, attributes: ['id', 'nombre'] },
-        { model: Tipos_venta, attributes: ['id', 'nombre'] },
+        {
+          model: Clientes,
+          attributes: ['id', 'nombres', 'apellidos', 'email', 'telefono']
+        },
+        {
+          model: Estados_pedido,
+          attributes: ['id', 'nombre']
+        },
+        {
+          model: Tipos_venta,
+          attributes: ['id', 'nombre']
+        },
         {
           model: Detalle_pedido,
-          include: [{ model: Productos, attributes: ['id', 'nombre'] }]
+          include: [
+            {
+              model: Productos,
+              attributes: ['id', 'nombre']
+            }
+          ]
         },
         {
           model: Pagos,
-          attributes: ['id', 'referencia', 'estado_pago_id', 'metodo_pago_id'],
+          attributes: [
+            'id',
+            'referencia',
+            'estado_pago_id',
+            'metodo_pago_id'
+          ],
           include: [
-            { model: Estados_pago, attributes: ['id', 'nombre'] },
-            { model: Metodos_pago, attributes: ['id', 'nombre'] }
+            {
+              model: Estados_pago,
+              attributes: ['id', 'nombre']
+            },
+            {
+              model: Metodos_pago,
+              attributes: ['id', 'nombre']
+            }
           ]
         }
       ],

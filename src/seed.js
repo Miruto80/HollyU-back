@@ -90,6 +90,8 @@ const botaAncho = await createOrFind(Tipo_bota, { nombre: 'Ancho' });
 const metodoPagoMovil = await createOrFind(Metodos_pago, { nombre: 'Pago móvil' });
 const metodoTransferencia = await createOrFind(Metodos_pago, { nombre: 'Transferencia' });
 const metodoEfectivo = await createOrFind(Metodos_pago, { nombre: 'Efectivo' });
+const metodoTarjeta = await createOrFind(Metodos_pago, { nombre: 'Tarjeta' });
+const metodoZelle = await createOrFind(Metodos_pago, { nombre: 'Zelle' });
 
 const estadoPagoPendiente = await createOrFind(Estados_pago, { nombre: 'Pendiente de verificación' });
 const estadoPagoVerificado = await createOrFind(Estados_pago, { nombre: 'Verificado' });
