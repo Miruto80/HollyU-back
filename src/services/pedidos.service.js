@@ -17,7 +17,8 @@ import {
   Pagos,
   Metodos_pago,
   Estados_pago,
-  Producciones
+  Producciones,
+  Estados_produccion
 } from "../models/index.js";
 
 const ESTADO_PAGO_VERIFICADO = 2;
@@ -48,52 +49,61 @@ export const getPedidos = async (filters = {}) => {
       };
     }
 
-    return await Pedidos.findAll({
-      where,
+   return await Pedidos.findAll({
+  where,
+  include: [
+    {
+      model: Clientes,
+      attributes: ['id', 'nombres', 'apellidos', 'email', 'telefono']
+    },
+    {
+      model: Estados_pedido,
+      attributes: ['id', 'nombre']
+    },
+    {
+      model: Tipos_venta,
+      attributes: ['id', 'nombre']
+    },
+    {
+      model: Detalle_pedido,
       include: [
         {
-          model: Clientes,
-          attributes: ['id', 'nombres', 'apellidos', 'email', 'telefono']
-        },
-        {
-          model: Estados_pedido,
+          model: Productos,
           attributes: ['id', 'nombre']
-        },
-        {
-          model: Tipos_venta,
-          attributes: ['id', 'nombre']
-        },
-        {
-          model: Detalle_pedido,
-          include: [
-            {
-              model: Productos,
-              attributes: ['id', 'nombre']
-            }
-          ]
-        },
-        {
-          model: Pagos,
-          attributes: [
-            'id',
-            'referencia',
-            'estado_pago_id',
-            'metodo_pago_id'
-          ],
-          include: [
-            {
-              model: Estados_pago,
-              attributes: ['id', 'nombre']
-            },
-            {
-              model: Metodos_pago,
-              attributes: ['id', 'nombre']
-            }
-          ]
         }
+      ]
+    },
+    {
+      model: Pagos,
+      attributes: [
+        'id',
+        'referencia',
+        'estado_pago_id',
+        'metodo_pago_id'
       ],
-      order: [['fecha', 'DESC']]
-    });
+      include: [
+        {
+          model: Estados_pago,
+          attributes: ['id', 'nombre']
+        },
+        {
+          model: Metodos_pago,
+          attributes: ['id', 'nombre']
+        }
+      ]
+    },
+    {
+      model: Producciones,
+      include: [
+        {
+          model: Estados_produccion,
+          attributes: ['id', 'nombre']
+        }
+      ]
+    }
+  ],
+  order: [['fecha', 'DESC']]
+});
   } catch (error) {
     console.error('Error fetching orders:', error);
     throw error;
@@ -116,6 +126,7 @@ export const getPedidoById = async (id) => {
         { model: Clientes, attributes: ['id', 'nombres', 'apellidos', 'email', 'telefono'] },
         { model: Estados_pedido, attributes: ['id', 'nombre'] },
         { model: Tipos_venta, attributes: ['id', 'nombre'] },
+
         {
           model: Detalle_pedido,
           include: [
@@ -127,11 +138,22 @@ export const getPedidoById = async (id) => {
             { model: Tipo_bota, attributes: ['id', 'nombre'] },
           ]
         },
+
         {
           model: Pagos,
           include: [
             { model: Metodos_pago },
             { model: Estados_pago }
+          ]
+        },
+
+        {
+          model: Producciones,
+          include: [
+            {
+              model: Estados_produccion,
+              attributes: ['id', 'nombre']
+            }
           ]
         }
       ]
