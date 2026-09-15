@@ -69,7 +69,11 @@ export const getProductoById = async (id) => {
           attributes: ['id', 'nombre'],
           through: { attributes: [] }
         },
-        { model: Producto_imagenes },
+      {
+  model: Producto_imagenes,
+  separate: true,
+  order: [['orden', 'ASC']]
+},
         {
           model: Modelos,
           include: [
