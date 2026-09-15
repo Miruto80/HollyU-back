@@ -347,3 +347,73 @@ export const cambiarEstatusProducto = async (id, nuevoEstatus) => {
   await producto.update({ estatus: estatusNum });
   return getProductoById(id);
 };
+
+export const eliminarImagenProducto = async (productoId, imagenId) => {
+  const imagen = await Producto_imagenes.findOne({
+    where: { id: imagenId, producto_id: productoId }
+  });
+  if (!imagen) throw new Error('Imagen no encontrada');
+
+  const eraPrincipal = imagen.principal;
+
+  // Borrar el archivo físico
+  const filePath = path.join(process.cwd(), imagen.imagen);
+  fs.unlink(filePath, () => {}); // no bloqueamos si falla, puede que ya no exista
+
+  await imagen.destroy();
+
+  // Si borramos la principal, promovemos otra (la de menor orden) a principal
+  if (eraPrincipal) {
+    const siguiente = await Producto_imagenes.findOne({
+      where: { producto_id: productoId },
+      order: [['orden', 'ASC']]
+    });
+    if (siguiente) {
+      await siguiente.update({ principal: true });
+    }
+  }
+
+  return getProductoById(productoId);
+};
+
+export const reemplazarImagenProducto = async (productoId, imagenId, archivo) => {
+  const imagen = await Producto_imagenes.findOne({
+    where: { id: imagenId, producto_id: productoId }
+  });
+  if (!imagen) throw new Error('Imagen no encontrada');
+
+  if (!archivo) throw new Error('Debe subir un archivo nuevo');
+
+  const destFolder = path.join('uploads', 'products');
+  if (!fs.existsSync(destFolder)) {
+    fs.mkdirSync(destFolder, { recursive: true });
+  }
+
+  const destPath = path.join(destFolder, archivo.filename);
+  fs.renameSync(archivo.path, destPath);
+
+  // Borrar el archivo viejo del disco
+  const oldFilePath = path.join(process.cwd(), imagen.imagen);
+  fs.unlink(oldFilePath, () => {});
+
+  await imagen.update({
+    imagen: `/uploads/products/${archivo.filename}`
+  });
+
+  return getProductoById(productoId);
+};
+
+export const marcarImagenPrincipal = async (productoId, imagenId) => {
+  const imagen = await Producto_imagenes.findOne({
+    where: { id: imagenId, producto_id: productoId }
+  });
+  if (!imagen) throw new Error('Imagen no encontrada');
+
+  await Producto_imagenes.update(
+    { principal: false },
+    { where: { producto_id: productoId } }
+  );
+  await imagen.update({ principal: true });
+
+  return getProductoById(productoId);
+};

@@ -1,4 +1,4 @@
-import {getProductos, getProductoById, postProducto, putProducto, deleteProducto, cambiarEstatusProducto} from '../services/productos.service.js';
+import {getProductos, getProductoById, postProducto, putProducto, deleteProducto, cambiarEstatusProducto, marcarImagenPrincipal, eliminarImagenProducto, reemplazarImagenProducto} from '../services/productos.service.js';
 
 export const getProductosController = async (req, res) => {
     try {
@@ -68,6 +68,34 @@ export const patchEstatusProductoController = async (req, res) => {
   try {
     const { estatus } = req.body;
     const producto = await cambiarEstatusProducto(req.params.id, estatus);
+    res.json(producto);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteImagenController = async (req, res) => {
+  try {
+    const producto = await eliminarImagenProducto(req.params.id, req.params.imagenId);
+    res.json(producto);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const putImagenController = async (req, res) => {
+  try {
+    const producto = await reemplazarImagenProducto(req.params.id, req.params.imagenId, req.file);
+    res.json(producto);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const patchImagenPrincipalController = async (req, res) => {
+  try {
+    const producto = await marcarImagenPrincipal(req.params.id, req.params.imagenId);
     res.json(producto);
   } catch (error) {
     res.status(400).json({ message: error.message });
