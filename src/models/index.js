@@ -20,6 +20,7 @@ import { Personalizaciones, associatePersonalizaciones } from './Personalizacion
 import { Producciones, associateProducciones } from './Producciones.model.js';
 import { Productos, associateProductos } from './Productos.model.js';
 import { Producto_imagenes, associateProducto_imagenes } from './Producto_imagenes.model.js';
+import { Producto_modelos, associateProducto_modelos } from './Producto_modelo.model.js';
 import {Modelos, associateModelos} from "./Modelos.model.js";
 import {Modelo_telas, associateModelo_telas} from "./Modelo_telas.model.js";
 import {Modelo_telas_colores, associateModelo_telas_colores} from "./Modelo_telas_colores.model.js";
@@ -58,6 +59,7 @@ export const associateAllModels = (models = sequelize.models) => {
   associateProducciones(models);
   associateProductos(models);
   associateProducto_imagenes(models);
+  associateProducto_modelos(models);
   associateModelos(models);
   associateModelo_telas(models);
   associateModelo_telas_colores(models);
@@ -97,6 +99,7 @@ export {
   Producciones,
   Productos,
   Producto_imagenes,
+  Producto_modelos,
   Modelos,
   Modelo_telas,
   Modelo_telas_colores,

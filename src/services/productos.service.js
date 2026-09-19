@@ -7,6 +7,7 @@ import {
   Productos,
   Producto_imagenes,
   Modelos,
+  Producto_modelos,
   Modelo_telas,
   Modelo_telas_colores,
   Modelo_tallas,
@@ -74,25 +75,26 @@ export const getProductoById = async (id) => {
   separate: true,
   order: [['orden', 'ASC']]
 },
+       {
+  model: Producto_modelos,
+  include: [
+    { model: Modelos, attributes: ['id', 'nombre'] },
+    {
+      model: Modelo_telas,
+      include: [
+        { model: Tipos_tela },
         {
-          model: Modelos,
-          include: [
-            {
-              model: Modelo_telas,
-              include: [
-                { model: Tipos_tela },
-                {
-                  model: Modelo_telas_colores,
-                  include: [{ model: Colores, as: 'color' }]
-                }
-              ]
-            },
-            {
-              model: Modelo_tallas,
-              include: [{ model: Tallas }]
-            }
-          ]
+          model: Modelo_telas_colores,
+          include: [{ model: Colores, as: 'color' }]
         }
+      ]
+    },
+    {
+      model: Modelo_tallas,
+      include: [{ model: Tallas }]
+    }
+  ]
+}
       ]
     });
   } catch (error) {
@@ -100,6 +102,19 @@ export const getProductoById = async (id) => {
     throw error;
   }
 };
+
+const resolverModeloId = async (nombreOModeloId, t) => {
+  if (typeof nombreOModeloId === 'number' || /^\d+$/.test(nombreOModeloId)) {
+    return Number(nombreOModeloId);
+  }
+
+  const [modelo] = await Modelos.findOrCreate({
+    where: { nombre: nombreOModeloId },
+    transaction: t
+  });
+  return modelo.id;
+};
+
 
 export const postProducto = async (payload) => {
   const t = await sequelize.transaction();
@@ -148,34 +163,35 @@ export const postProducto = async (payload) => {
       }
     }
 
-    for (const m of modelos) {
-      const modelo = await Modelos.create({
-        producto_id: producto.id,
-        nombre: m.nombre,
-        descripcion: m.descripcion
+   for (const m of modelos) {
+  const modeloId = await resolverModeloId(m.modelo, t);
+
+  const productoModelo = await Producto_modelos.create({
+    producto_id: producto.id,
+    modelo_id: modeloId
+  }, { transaction: t });
+
+  for (const tela of m.telas) {
+    const modeloTela = await Modelo_telas.create({
+      producto_modelo_id: productoModelo.id,
+      tipo_tela_id: tela.tipo_tela_id
+    }, { transaction: t });
+
+    for (const colorId of tela.colores) {
+      await Modelo_telas_colores.create({
+        modelo_tela_id: modeloTela.id,
+        color_id: colorId
       }, { transaction: t });
-
-      for (const tela of m.telas) {
-        const modeloTela = await Modelo_telas.create({
-          modelo_id: modelo.id,
-          tipo_tela_id: tela.tipo_tela_id
-        }, { transaction: t });
-
-        for (const colorId of tela.colores) {
-          await Modelo_telas_colores.create({
-            modelo_tela_id: modeloTela.id,
-            color_id: colorId
-          }, { transaction: t });
-        }
-      }
-
-      for (const tallaId of m.tallas) {
-        await Modelo_tallas.create({
-          modelo_id: modelo.id,
-          talla_id: tallaId
-        }, { transaction: t });
-      }
     }
+  }
+
+  for (const tallaId of m.tallas) {
+    await Modelo_tallas.create({
+      producto_modelo_id: productoModelo.id,
+      talla_id: tallaId
+    }, { transaction: t });
+  }
+}
 
     await t.commit();
     return getProductoById(producto.id);
@@ -202,10 +218,11 @@ export const putProducto = async (id, payload) => {
       tipo_bota_ids,
       precio, precio_mayor, stock,
       permite_personalizacion, tiempo_fabricacion,
-      modelos, // opcional: si viene, reemplaza toda la estructura
+      modelos,
       archivos
     } = payload;
 
+    // Actualizar datos básicos
     await producto.update({
       nombre, descripcion, categoria_id, genero_id,
       precio, precio_mayor, stock,
@@ -214,6 +231,7 @@ export const putProducto = async (id, payload) => {
       updated_at: new Date()
     }, { transaction: t });
 
+    // Actualizar tipos de bota
     if (tipo_bota_ids) {
       await Producto_tipo_bota.destroy({ where: { producto_id: id }, transaction: t });
       for (const tipoBotaId of tipo_bota_ids) {
@@ -225,26 +243,30 @@ export const putProducto = async (id, payload) => {
     }
 
     if (modelos) {
-      const modelosExistentes = await Modelos.findAll({
+      // Buscar modelos existentes del producto
+      const productoModelosExistentes = await Producto_modelos.findAll({
         where: { producto_id: id },
         attributes: ['id'],
         transaction: t
       });
-      const modeloIds = modelosExistentes.map(m => m.id);
+      const pmIds = productoModelosExistentes.map(pm => pm.id);
 
-      if (modeloIds.length > 0) {
+      if (pmIds.length > 0) {
+        // Verificar si hay pedidos asociados
         const pedidosAsociados = await Detalle_pedido.count({
-          where: { modelo_id: modeloIds },
+          where: { producto_modelo_id: pmIds },
           transaction: t
         });
 
         if (pedidosAsociados > 0) {
-          throw new Error('No se puede editar la estructura de modelos/telas/tallas porque este producto ya tiene pedidos asociados. Desactiva el producto y crea uno nuevo en su lugar.');
+          throw new Error(
+            'No se puede editar la estructura de modelos/telas/tallas porque este producto ya tiene pedidos asociados. Desactiva el producto y crea uno nuevo en su lugar.'
+          );
         }
 
-        // Sin pedidos asociados: seguro borrar y recrear
+        // Borrar estructura anterior
         const telasExistentes = await Modelo_telas.findAll({
-          where: { modelo_id: modeloIds },
+          where: { producto_modelo_id: pmIds },
           attributes: ['id'],
           transaction: t
         });
@@ -253,22 +275,25 @@ export const putProducto = async (id, payload) => {
         if (telaIds.length > 0) {
           await Modelo_telas_colores.destroy({ where: { modelo_tela_id: telaIds }, transaction: t });
         }
-        await Modelo_tallas.destroy({ where: { modelo_id: modeloIds }, transaction: t });
-        await Modelo_telas.destroy({ where: { modelo_id: modeloIds }, transaction: t });
-        await Modelos.destroy({ where: { producto_id: id }, transaction: t });
+
+        await Modelo_tallas.destroy({ where: { producto_modelo_id: pmIds }, transaction: t });
+        await Modelo_telas.destroy({ where: { producto_modelo_id: pmIds }, transaction: t });
+        await Producto_modelos.destroy({ where: { producto_id: id }, transaction: t });
       }
 
-      // Recrear desde cero con los datos nuevos
+      // Crear nueva estructura
       for (const m of modelos) {
-        const modeloNuevo = await Modelos.create({
+        const modeloId = await resolverModeloId(m.modelo, t);
+
+        const productoModelo = await Producto_modelos.create({
           producto_id: id,
-          nombre: m.nombre,
-          descripcion: m.descripcion
+          modelo_id: modeloId
         }, { transaction: t });
 
+        // Telas
         for (const tela of m.telas) {
           const modeloTela = await Modelo_telas.create({
-            modelo_id: modeloNuevo.id,
+            producto_modelo_id: productoModelo.id,
             tipo_tela_id: tela.tipo_tela_id
           }, { transaction: t });
 
@@ -280,16 +305,16 @@ export const putProducto = async (id, payload) => {
           }
         }
 
+        // Tallas
         for (const tallaId of m.tallas) {
           await Modelo_tallas.create({
-            modelo_id: modeloNuevo.id,
+            producto_modelo_id: productoModelo.id,
             talla_id: tallaId
           }, { transaction: t });
         }
       }
     }
 
-    // Imágenes nuevas: se agregan a las existentes, no las reemplazan
     if (archivos && archivos.length > 0) {
       const destFolder = path.join('uploads', 'products');
       if (!fs.existsSync(destFolder)) {

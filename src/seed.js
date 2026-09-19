@@ -10,6 +10,7 @@ import {
   Tallas,
   Productos,
   Producto_imagenes,
+  Producto_modelos,
   Modelos,
   Modelo_telas,
   Modelo_telas_colores,
@@ -165,7 +166,7 @@ const tipoVentaFisico = await createOrFind(Tipos_venta, { nombre: 'Fisico' });
       }
     );
 
-    const pijamaEnfermeria = await createOrFind(
+const pijamaEnfermeria = await createOrFind(
   Productos,
   { nombre: 'Pijama quirúrgica antifluido' },
   {
@@ -186,32 +187,35 @@ if (!pijamaEnfermeria.tipo_bota_id) {
 }
 
 await createOrFind(
-Producto_imagenes,
-{
-producto_id: pijamaEnfermeria.id,
-imagen: "/uploads/products/IMG_4201.webp"
-},
-{
-principal: true,
-orden: 1
-}
-);
-
-const modeloCuelloV = await createOrFind(
-  Modelos,
+  Producto_imagenes,
   {
     producto_id: pijamaEnfermeria.id,
-    nombre: 'Cuello V'
+    imagen: "/uploads/products/IMG_4201.webp"
   },
   {
-    descripcion: 'Pijama clínica cuello V'
+    principal: true,
+    orden: 1
+  }
+);
+
+
+const modeloCuelloVId = (await createOrFind(
+  Modelos,
+  { nombre: 'Cuello V' },
+)).id;
+
+const productoModeloCuelloV = await createOrFind(
+  Producto_modelos,
+  {
+    producto_id: pijamaEnfermeria.id,
+    modelo_id: modeloCuelloVId
   }
 );
 
 const modeloTelaAntifluido = await createOrFind(
   Modelo_telas,
   {
-    modelo_id: modeloCuelloV.id,
+    producto_modelo_id: productoModeloCuelloV.id,
     tipo_tela_id: tipoTelaAntifluido.id
   }
 );
@@ -219,25 +223,23 @@ const modeloTelaAntifluido = await createOrFind(
 await createOrFind(
   Modelo_tallas,
   {
-    modelo_id: modeloCuelloV.id,
+    producto_modelo_id: productoModeloCuelloV.id,
     talla_id: tallaS.id
   }
 );
 
-
 await createOrFind(
   Modelo_tallas,
   {
-    modelo_id: modeloCuelloV.id,
+    producto_modelo_id: productoModeloCuelloV.id,
     talla_id: tallaM.id
   }
 );
 
-
 await createOrFind(
   Modelo_tallas,
   {
-    modelo_id: modeloCuelloV.id,
+    producto_modelo_id: productoModeloCuelloV.id,
     talla_id: tallaL.id
   }
 );
@@ -250,7 +252,6 @@ await createOrFind(
   }
 );
 
-
 await createOrFind(
   Modelo_telas_colores,
   {
@@ -259,7 +260,6 @@ await createOrFind(
   }
 );
 
-
 await createOrFind(
   Modelo_telas_colores,
   {
@@ -267,6 +267,7 @@ await createOrFind(
     color_id: colorNegro.id
   }
 );
+
 
     console.log('Seed inicial completado para HollyU');
   } catch (error) {
