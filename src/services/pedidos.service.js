@@ -9,6 +9,7 @@ import {
   Tipos_venta,
   Detalle_pedido,
   Productos,
+  Producto_modelos,
   Modelos,
   Tipos_tela,
   Colores,
@@ -18,7 +19,10 @@ import {
   Metodos_pago,
   Estados_pago,
   Producciones,
-  Estados_produccion
+  Estados_produccion,
+  Modelo_telas,
+  Modelo_telas_colores,
+  Modelo_tallas
 } from "../models/index.js";
 
 const ESTADO_PAGO_VERIFICADO = 2;
@@ -49,61 +53,61 @@ export const getPedidos = async (filters = {}) => {
       };
     }
 
-   return await Pedidos.findAll({
-  where,
-  include: [
-    {
-      model: Clientes,
-      attributes: ['id', 'nombres', 'apellidos', 'email', 'telefono']
-    },
-    {
-      model: Estados_pedido,
-      attributes: ['id', 'nombre']
-    },
-    {
-      model: Tipos_venta,
-      attributes: ['id', 'nombre']
-    },
-    {
-      model: Detalle_pedido,
+    return await Pedidos.findAll({
+      where,
       include: [
         {
-          model: Productos,
-          attributes: ['id', 'nombre']
-        }
-      ]
-    },
-    {
-      model: Pagos,
-      attributes: [
-        'id',
-        'referencia',
-        'estado_pago_id',
-        'metodo_pago_id'
-      ],
-      include: [
+          model: Clientes,
+          attributes: ['id', 'nombres', 'apellidos', 'email', 'telefono']
+        },
         {
-          model: Estados_pago,
+          model: Estados_pedido,
           attributes: ['id', 'nombre']
         },
         {
-          model: Metodos_pago,
+          model: Tipos_venta,
           attributes: ['id', 'nombre']
-        }
-      ]
-    },
-    {
-      model: Producciones,
-      include: [
+        },
         {
-          model: Estados_produccion,
-          attributes: ['id', 'nombre']
+          model: Detalle_pedido,
+          include: [
+            {
+              model: Productos,
+              attributes: ['id', 'nombre']
+            }
+          ]
+        },
+        {
+          model: Pagos,
+          attributes: [
+            'id',
+            'referencia',
+            'estado_pago_id',
+            'metodo_pago_id'
+          ],
+          include: [
+            {
+              model: Estados_pago,
+              attributes: ['id', 'nombre']
+            },
+            {
+              model: Metodos_pago,
+              attributes: ['id', 'nombre']
+            }
+          ]
+        },
+        {
+          model: Producciones,
+          include: [
+            {
+              model: Estados_produccion,
+              attributes: ['id', 'nombre']
+            }
+          ]
         }
-      ]
-    }
-  ],
-  order: [['fecha', 'DESC']]
-});
+      ],
+      order: [['fecha', 'DESC']]
+    });
   } catch (error) {
     console.error('Error fetching orders:', error);
     throw error;
@@ -131,11 +135,26 @@ export const getPedidoById = async (id) => {
           model: Detalle_pedido,
           include: [
             { model: Productos, attributes: ['id', 'nombre'] },
-            { model: Modelos, attributes: ['id', 'nombre'] },
-            { model: Tipos_tela, attributes: ['id', 'nombre'] },
-            { model: Colores, attributes: ['id', 'nombre', 'codigo_hex'] },
-            { model: Tallas, attributes: ['id', 'nombre'] },
-            { model: Tipo_bota, attributes: ['id', 'nombre'] },
+            {
+              model: Producto_modelos,
+              include: [
+                { model: Modelos, attributes: ['id', 'nombre'] },
+                {
+                  model: Modelo_telas,
+                  include: [
+                    { model: Tipos_tela }
+                  ]
+                },
+                {
+                  model: Modelo_tallas,
+                  include: [{ model: Tallas }]
+                }
+              ]
+            },
+            { model: Modelo_telas },
+            { model: Colores },
+            { model: Tallas },
+            { model: Tipo_bota, attributes: ['id', 'nombre'] }
           ]
         },
 
@@ -249,9 +268,14 @@ export const postPedido = async (payload) => {
     }
 
     for (const item of items) {
-      const esNormal = Boolean(item.producto_id && item.modelo_id && item.tipo_tela_id && item.talla_id);
+      const esNormal = Boolean(
+        item.producto_id &&
+        item.producto_modelo_id &&
+        item.modelo_tela_id &&
+        item.talla_id
+      );
       if (!esNormal) {
-        throw new Error('Cada producto del pedido debe tener producto_id/modelo_id/tipo_tela_id/talla_id');
+        throw new Error('Cada producto del pedido debe tener producto_id/producto_modelo_id/modelo_tela_id/talla_id');
       }
     }
 
@@ -301,8 +325,8 @@ export const postPedido = async (payload) => {
       await Detalle_pedido.create({
         pedido_id: pedido.id,
         producto_id: item.producto_id || null,
-        modelo_id: item.modelo_id || null,
-        tipo_tela_id: item.tipo_tela_id || null,
+        producto_modelo_id: item.producto_modelo_id || null,
+        modelo_tela_id: item.modelo_tela_id || null,
         color_id: item.color_id || null,
         talla_id: item.talla_id || null,
         tipo_bota_id: item.tipo_bota_id || null,
@@ -425,9 +449,14 @@ export const createVentaPresencial = async (payload) => {
     if (!pagos || pagos.length === 0) throw new Error('La venta debe tener al menos un método de pago');
 
     for (const item of items) {
-      const esNormal = Boolean(item.producto_id && item.modelo_id && item.tipo_tela_id && item.talla_id);
+      const esNormal = Boolean(
+        item.producto_id &&
+        item.producto_modelo_id &&
+        item.modelo_tela_id &&
+        item.talla_id
+      );
       if (!esNormal) {
-        throw new Error('Cada producto debe tener producto_id/modelo_id/tipo_tela_id/talla_id');
+        throw new Error('Cada producto debe tener producto_id/producto_modelo_id/modelo_tela_id/talla_id');
       }
     }
 
@@ -474,8 +503,8 @@ export const createVentaPresencial = async (payload) => {
       await Detalle_pedido.create({
         pedido_id: pedido.id,
         producto_id: item.producto_id,
-        modelo_id: item.modelo_id,
-        tipo_tela_id: item.tipo_tela_id,
+        producto_modelo_id: item.producto_modelo_id,
+        modelo_tela_id: item.modelo_tela_id,
         color_id: item.color_id || null,
         talla_id: item.talla_id,
         tipo_bota_id: item.tipo_bota_id || null,
