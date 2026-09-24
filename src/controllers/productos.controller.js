@@ -1,4 +1,11 @@
-import {getProductos, getProductoById, postProducto, putProducto, deleteProducto, cambiarEstatusProducto, marcarImagenPrincipal, eliminarImagenProducto, reemplazarImagenProducto} from '../services/productos.service.js';
+import {getProductos, 
+  getProductoById, 
+  postProducto, 
+  putProducto, 
+  deleteProducto, 
+  cambiarEstatusProducto, 
+  marcarImagenPrincipal, 
+  eliminarImagenProducto, reemplazarImagenProducto, getProductosMasVendidos } from '../services/productos.service.js';
 
 export const getProductosController = async (req, res) => {
     try {
@@ -99,5 +106,15 @@ export const patchImagenPrincipalController = async (req, res) => {
     res.json(producto);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+export const getProductosMasVendidosController = async (req, res) => {
+  try {
+    const limit = req.query.limit ? Number(req.query.limit) : 6;
+    const productos = await getProductosMasVendidos(limit);
+    res.json(productos);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

@@ -4,11 +4,15 @@ import { upload } from '../middlewares/uploadImage.middleware.js';
 import {getProductosController, 
     getProductoByIdController, 
     postProductoController, 
-    putProductoController, deleteProductoController, patchEstatusProductoController,deleteImagenController,putImagenController, patchImagenPrincipalController } from '../controllers/productos.controller.js';
+    putProductoController, 
+    deleteProductoController, 
+    patchEstatusProductoController, 
+    deleteImagenController,putImagenController, patchImagenPrincipalController, getProductosMasVendidosController  } from '../controllers/productos.controller.js';
 
 const router = express.Router();
 
 router.get("/productos", getProductosController);
+router.get("/productos/mas-vendidos", getProductosMasVendidosController);
 router.get("/productos/:id", getProductoByIdController);
 router.post("/productos", upload.array('imagenes', 8), postProductoController);
 router.put("/productos/:id", upload.array('imagenes', 8), putProductoController);

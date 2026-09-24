@@ -446,3 +446,44 @@ export const marcarImagenPrincipal = async (productoId, imagenId) => {
 
   return getProductoById(productoId);
 };
+
+export const getProductosMasVendidos = async (limit = 6) => {
+  try {
+    const masVendidos = await Detalle_pedido.findAll({
+      attributes: [
+        'producto_id',
+        [sequelize.fn('SUM', sequelize.col('cantidad')), 'total_vendido']
+      ],
+      where: { producto_id: { [Op.ne]: null } }, // excluye líneas personalizadas sin producto_id
+      group: ['producto_id'],
+      order: [[sequelize.fn('SUM', sequelize.col('cantidad')), 'DESC']],
+      limit,
+      raw: true
+    });
+
+    const productoIds = masVendidos.map(r => r.producto_id);
+    if (productoIds.length === 0) return [];
+
+    const productos = await Productos.findAll({
+      where: { id: productoIds, estatus: 1 },
+      include: [
+        { model: Categorias, attributes: ['id', 'nombre'] },
+        {
+          model: Producto_imagenes,
+          attributes: ['imagen'],
+          where: { principal: true },
+          required: false
+        }
+      ]
+    });
+
+    const productosOrdenados = productoIds
+      .map(id => productos.find(p => p.id === id))
+      .filter(Boolean);
+
+    return productosOrdenados;
+  } catch (error) {
+    console.error('Error fetching productos mas vendidos:', error);
+    throw error;
+  }
+};
