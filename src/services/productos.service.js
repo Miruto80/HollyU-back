@@ -24,6 +24,7 @@ import {
 const ESTATUS_ELIMINADO = 0;
 const ESTATUS_ACTIVO = 1;
 const ESTATUS_DESACTIVADO = 2;
+const ESTADO_PAGO_VERIFICADO = 2
 
 export const getProductos = async (filters = {}) => {
   try {
@@ -454,7 +455,14 @@ export const getProductosMasVendidos = async (limit = 6) => {
         'producto_id',
         [sequelize.fn('SUM', sequelize.col('cantidad')), 'total_vendido']
       ],
-      where: { producto_id: { [Op.ne]: null } }, // excluye líneas personalizadas sin producto_id
+      where: {
+        producto_id: { [Op.ne]: null },
+        pedido_id: {
+          [Op.in]: sequelize.literal(
+            `(SELECT DISTINCT pedido_id FROM pagos WHERE estado_pago_id = ${ESTADO_PAGO_VERIFICADO})`
+          )
+        }
+      },
       group: ['producto_id'],
       order: [[sequelize.fn('SUM', sequelize.col('cantidad')), 'DESC']],
       limit,
@@ -477,11 +485,9 @@ export const getProductosMasVendidos = async (limit = 6) => {
       ]
     });
 
-    const productosOrdenados = productoIds
+    return productoIds
       .map(id => productos.find(p => p.id === id))
       .filter(Boolean);
-
-    return productosOrdenados;
   } catch (error) {
     console.error('Error fetching productos mas vendidos:', error);
     throw error;
