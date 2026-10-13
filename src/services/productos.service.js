@@ -118,6 +118,9 @@ const resolverModeloId = async (nombreOModeloId, t) => {
   return modelo.id;
 };
 
+const valorOpcional = (value) => value === '' ? null : value;
+const valorConDefecto = (value, defaultValue) => value === '' ? defaultValue : value;
+
 
 export const postProducto = async (payload) => {
   const t = await sequelize.transaction();
@@ -131,10 +134,13 @@ export const postProducto = async (payload) => {
     } = payload;
 
     const producto = await Productos.create({
-      nombre, descripcion, categoria_id, genero_id, tipo_bota_id,
-      precio, precio_mayor, stock: stock || 0,
+      nombre, descripcion, categoria_id,
+      genero_id: valorOpcional(genero_id),
+      tipo_bota_id: valorOpcional(tipo_bota_id),
+      precio, precio_mayor: valorOpcional(precio_mayor),
+      stock: valorConDefecto(stock, 0),
       permite_personalizacion: permite_personalizacion === 'true' || permite_personalizacion === true,
-      tiempo_fabricacion,
+      tiempo_fabricacion: valorConDefecto(tiempo_fabricacion, 7),
       estatus: ESTATUS_ACTIVO
     }, { transaction: t });
 
@@ -166,35 +172,36 @@ export const postProducto = async (payload) => {
       }
     }
 
-   for (const m of modelos) {
-  const modeloId = await resolverModeloId(m.modelo, t);
+    for (const m of modelos) {
+      const modeloId = await resolverModeloId(m.modelo, t);
 
-  const productoModelo = await Producto_modelos.create({
-    producto_id: producto.id,
-    modelo_id: modeloId
-  }, { transaction: t });
-
-  for (const tela of m.telas) {
-    const modeloTela = await Modelo_telas.create({
-      producto_modelo_id: productoModelo.id,
-      tipo_tela_id: tela.tipo_tela_id
-    }, { transaction: t });
-
-    for (const colorId of tela.colores) {
-      await Modelo_telas_colores.create({
-        modelo_tela_id: modeloTela.id,
-        color_id: colorId
+      const productoModelo = await Producto_modelos.create({
+        producto_id: producto.id,
+        modelo_id: modeloId,
+        activo: true
       }, { transaction: t });
-    }
-  }
 
-  for (const tallaId of m.tallas) {
-    await Modelo_tallas.create({
-      producto_modelo_id: productoModelo.id,
-      talla_id: tallaId
-    }, { transaction: t });
-  }
-}
+      for (const tela of m.telas) {
+        const modeloTela = await Modelo_telas.create({
+          producto_modelo_id: productoModelo.id,
+          tipo_tela_id: tela.tipo_tela_id
+        }, { transaction: t });
+
+        for (const colorId of tela.colores) {
+          await Modelo_telas_colores.create({
+            modelo_tela_id: modeloTela.id,
+            color_id: colorId
+          }, { transaction: t });
+        }
+      }
+
+      for (const tallaId of m.tallas) {
+        await Modelo_tallas.create({
+          producto_modelo_id: productoModelo.id,
+          talla_id: tallaId
+        }, { transaction: t });
+      }
+    }
 
     await t.commit();
     return getProductoById(producto.id);
@@ -227,10 +234,12 @@ export const putProducto = async (id, payload) => {
 
     // Actualizar datos básicos
     await producto.update({
-      nombre, descripcion, categoria_id, genero_id,
-      precio, precio_mayor, stock,
+      nombre, descripcion, categoria_id,
+      genero_id: valorOpcional(genero_id),
+      precio, precio_mayor: valorOpcional(precio_mayor),
+      stock: valorConDefecto(stock, 0),
       permite_personalizacion: permite_personalizacion === 'true' || permite_personalizacion === true,
-      tiempo_fabricacion,
+      tiempo_fabricacion: valorConDefecto(tiempo_fabricacion, 7),
       updated_at: new Date()
     }, { transaction: t });
 
@@ -246,84 +255,80 @@ export const putProducto = async (id, payload) => {
     }
 
     if (modelos) {
-  const productoModelosExistentes = await Producto_modelos.findAll({
-    where: { producto_id: id, activo: true },
-    attributes: ['id'],
-    transaction: t
-  });
-  const pmIds = productoModelosExistentes.map(pm => pm.id);
-
-  if (pmIds.length > 0) {
-    // Separamos los que ya tienen pedidos (se retiran, intactos) de los que no (se borran limpio)
-    const pmConPedidos = await Detalle_pedido.findAll({
-      where: { producto_modelo_id: pmIds },
-      attributes: ['producto_modelo_id'],
-      group: ['producto_modelo_id'],
-      transaction: t,
-      raw: true
-    });
-    const idsConPedidos = new Set(pmConPedidos.map(r => r.producto_modelo_id));
-
-    const idsARetirar = pmIds.filter(pmId => idsConPedidos.has(pmId));
-    const idsABorrar = pmIds.filter(pmId => !idsConPedidos.has(pmId));
-
-    if (idsARetirar.length > 0) {
-      // No se toca su tela/color/talla, solo deja de verse para compras/edición nuevas
-      await Producto_modelos.update(
-        { activo: false },
-        { where: { id: idsARetirar }, transaction: t }
-      );
-    }
-
-    if (idsABorrar.length > 0) {
-      const telasExistentes = await Modelo_telas.findAll({
-        where: { producto_modelo_id: idsABorrar },
+      const productoModelosExistentes = await Producto_modelos.findAll({
+        where: { producto_id: id, activo: true },
         attributes: ['id'],
         transaction: t
       });
-      const telaIds = telasExistentes.map(t2 => t2.id);
+      const pmIds = productoModelosExistentes.map(pm => pm.id);
 
-      if (telaIds.length > 0) {
-        await Modelo_telas_colores.destroy({ where: { modelo_tela_id: telaIds }, transaction: t });
+      if (pmIds.length > 0) {
+        const pmConPedidos = await Detalle_pedido.findAll({
+          where: { producto_modelo_id: pmIds },
+          attributes: ['producto_modelo_id'],
+          group: ['producto_modelo_id'],
+          transaction: t,
+          raw: true
+        });
+        const idsConPedidos = new Set(pmConPedidos.map(r => r.producto_modelo_id));
+        const idsARetirar = pmIds.filter(pmId => idsConPedidos.has(pmId));
+        const idsABorrar = pmIds.filter(pmId => !idsConPedidos.has(pmId));
+
+        if (idsARetirar.length > 0) {
+          await Producto_modelos.update(
+            { activo: false },
+            { where: { id: idsARetirar }, transaction: t }
+          );
+        }
+
+        if (idsABorrar.length > 0) {
+          const telasExistentes = await Modelo_telas.findAll({
+            where: { producto_modelo_id: idsABorrar },
+            attributes: ['id'],
+            transaction: t
+          });
+          const telaIds = telasExistentes.map(tela => tela.id);
+
+          if (telaIds.length > 0) {
+            await Modelo_telas_colores.destroy({ where: { modelo_tela_id: telaIds }, transaction: t });
+          }
+          await Modelo_tallas.destroy({ where: { producto_modelo_id: idsABorrar }, transaction: t });
+          await Modelo_telas.destroy({ where: { producto_modelo_id: idsABorrar }, transaction: t });
+          await Producto_modelos.destroy({ where: { id: idsABorrar }, transaction: t });
+        }
       }
-      await Modelo_tallas.destroy({ where: { producto_modelo_id: idsABorrar }, transaction: t });
-      await Modelo_telas.destroy({ where: { producto_modelo_id: idsABorrar }, transaction: t });
-      await Producto_modelos.destroy({ where: { id: idsABorrar }, transaction: t });
-    }
-  }
 
-  // Se crea la estructura nueva siempre, sin bloqueo
-  for (const m of modelos) {
-    const modeloId = await resolverModeloId(m.modelo, t);
+      for (const m of modelos) {
+        const modeloId = await resolverModeloId(m.modelo, t);
 
-    const productoModelo = await Producto_modelos.create({
-      producto_id: id,
-      modelo_id: modeloId,
-      activo: true
-    }, { transaction: t });
-
-    for (const tela of m.telas) {
-      const modeloTela = await Modelo_telas.create({
-        producto_modelo_id: productoModelo.id,
-        tipo_tela_id: tela.tipo_tela_id
-      }, { transaction: t });
-
-      for (const colorId of tela.colores) {
-        await Modelo_telas_colores.create({
-          modelo_tela_id: modeloTela.id,
-          color_id: colorId
+        const productoModelo = await Producto_modelos.create({
+          producto_id: id,
+          modelo_id: modeloId,
+          activo: true
         }, { transaction: t });
+
+        for (const tela of m.telas) {
+          const modeloTela = await Modelo_telas.create({
+            producto_modelo_id: productoModelo.id,
+            tipo_tela_id: tela.tipo_tela_id
+          }, { transaction: t });
+
+          for (const colorId of tela.colores) {
+            await Modelo_telas_colores.create({
+              modelo_tela_id: modeloTela.id,
+              color_id: colorId
+            }, { transaction: t });
+          }
+        }
+
+        for (const tallaId of m.tallas) {
+          await Modelo_tallas.create({
+            producto_modelo_id: productoModelo.id,
+            talla_id: tallaId
+          }, { transaction: t });
+        }
       }
     }
-
-    for (const tallaId of m.tallas) {
-      await Modelo_tallas.create({
-        producto_modelo_id: productoModelo.id,
-        talla_id: tallaId
-      }, { transaction: t });
-    }
-  }
-}
 
     if (archivos && archivos.length > 0) {
       const destFolder = path.join('uploads', 'products');
