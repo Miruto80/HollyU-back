@@ -4,11 +4,11 @@ import sequelize from '../database/db.js';
 export const Producto_modelos = sequelize.define('Producto_modelos', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   producto_id: { type: DataTypes.INTEGER, allowNull: false },
-  modelo_id: { type: DataTypes.INTEGER, allowNull: false }
+  modelo_id: { type: DataTypes.INTEGER, allowNull: false },
+  activo: { type: DataTypes.BOOLEAN, defaultValue: true }
 }, {
   tableName: 'producto_modelos',
   timestamps: false,
-  indexes: [{ unique: true, fields: ['producto_id', 'modelo_id'] }]
 });
 
 export const associateProducto_modelos = () => {
