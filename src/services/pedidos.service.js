@@ -24,6 +24,7 @@ import {
   Modelo_telas_colores,
   Modelo_tallas
 } from "../models/index.js";
+import { crearNotificacion, TIPOS_NOTIFICACION } from './notificaciones.service.js';
 
 const ESTADO_PAGO_VERIFICADO = 2;
 const ESTADO_PAGO_RECHAZADO = 3;
@@ -223,6 +224,17 @@ const procesarStockYProduccion = async (pedidoId, t) => {
         fecha_inicio: new Date()
       }, { transaction: t });
     }
+
+    const pedido = await Pedidos.findByPk(pedidoId, {
+      attributes: ['cliente_id'],
+      transaction: t
+    });
+    await crearNotificacion({
+      cliente_id: pedido.cliente_id,
+      pedido_id: pedidoId,
+      tipo: TIPOS_NOTIFICACION.PRODUCCION,
+      mensaje: `El pedido #${pedidoId} requiere producción.`
+    }, { transaction: t });
   } else {
     await Pedidos.update(
       { estado_pedido_id: ESTADO_PEDIDO_LISTO_ENTREGA },
@@ -358,6 +370,15 @@ export const postPedido = async (payload) => {
       telefono_emisor,
       comprobante: comprobantePath
     }, { transaction: t });
+
+    if (Number(tipo_venta_id) !== TIPO_VENTA_PRESENCIAL) {
+      await crearNotificacion({
+        cliente_id,
+        pedido_id: pedido.id,
+        tipo: TIPOS_NOTIFICACION.PEDIDO_WEB,
+        mensaje: `Nuevo pedido web #${pedido.id} recibido.`
+      }, { transaction: t });
+    }
 
     await t.commit();
     return getPedidoById(pedido.id);

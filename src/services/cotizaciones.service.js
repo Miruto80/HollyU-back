@@ -12,6 +12,7 @@ import {
   Estados_produccion
 } from '../models/index.js';
 import sequelize from '../database/db.js';
+import { crearNotificacion, TIPOS_NOTIFICACION } from './notificaciones.service.js';
 
 export const getCotizaciones = async () => {
   return Cotizaciones.findAll({
@@ -108,6 +109,13 @@ export const pasarCotizacionAProduccion = async (cotizacionId) => {
         pedido_id: pedido.id,
         estado_produccion_id: estadoProduccionInicial.id,
         fecha_inicio: new Date()
+      }, { transaction });
+
+      await crearNotificacion({
+        cliente_id: cotizacion.cliente_id,
+        pedido_id: pedido.id,
+        tipo: TIPOS_NOTIFICACION.PRODUCCION,
+        mensaje: `El pedido #${pedido.id} pasó a producción.`
       }, { transaction });
     }
 

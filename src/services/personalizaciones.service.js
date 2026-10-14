@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import sequelize from '../database/db.js';
 import {
   Clientes,
   Cotizaciones,
@@ -9,6 +10,7 @@ import {
   Productos,
   Producto_imagenes
 } from '../models/index.js';
+import { crearNotificacion, TIPOS_NOTIFICACION } from './notificaciones.service.js';
 
 
 export const getPersonalizaciones = async (filters = {}) => {
@@ -68,24 +70,35 @@ export const postPersonalizacion = async (payload) => {
   }
 
   let imagenReferencia = imagen_referencia || null;
-  if (archivo) {
-    const destFolder = path.join('uploads', 'personalizaciones');
-    fs.mkdirSync(destFolder, { recursive: true });
-    const destPath = path.join(destFolder, archivo.filename);
-    fs.renameSync(archivo.path, destPath);
-    imagenReferencia = `/uploads/personalizaciones/${archivo.filename}`;
-  }
-
+  const transaction = await sequelize.transaction();
   try {
-    return await Personalizaciones.create({
+    if (archivo) {
+      const destFolder = path.join('uploads', 'personalizaciones');
+      fs.mkdirSync(destFolder, { recursive: true });
+      const destPath = path.join(destFolder, archivo.filename);
+      fs.renameSync(archivo.path, destPath);
+      imagenReferencia = `/uploads/personalizaciones/${archivo.filename}`;
+    }
+
+    const personalizacion = await Personalizaciones.create({
       cliente_id,
       producto_id,
       descripcion_solicitada: descripcion_solicitada.trim(),
       imagen_referencia: imagenReferencia,
       observaciones,
       estado: 'pendiente_aprobacion'
-    });
+    }, { transaction });
+
+    await crearNotificacion({
+      cliente_id,
+      tipo: TIPOS_NOTIFICACION.PERSONALIZACION,
+      mensaje: `Nueva solicitud de personalización #${personalizacion.id}.`
+    }, { transaction });
+
+    await transaction.commit();
+    return personalizacion;
   } catch (error) {
+    await transaction.rollback();
     if (archivo) fs.unlink(path.join('uploads', 'personalizaciones', archivo.filename), () => {});
     throw error;
   }
