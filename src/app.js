@@ -2,8 +2,6 @@ import cors from 'cors';
 import express from 'express';
 import morgan from 'morgan';
 import compression from 'compression';
-import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
 import path from "path";
 import { fileURLToPath } from 'url';
 
@@ -36,28 +34,7 @@ import tipos_descuento from './routers/tipos_descuento.router.js';
 import metodos_pago from './routers/metodos_pago.router.js';
 import notificaciones from './routers/notificaciones.router.js';
 
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'HollyU API',
-      version: '1.0.0',
-      description: 'Documentación de la API de HollyU',
-    },
-    servers: [
-      {
-        url: `http://localhost:${process.env.PORT}`
-      },
-    ],
-  },
-  apis: ['./src/routers/*.js', './src/controllers/*.js'],
-};
-
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
-
 export const app = express();
-
-app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(cors());
 app.use(express.json());
