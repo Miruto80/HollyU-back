@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 
 import sequelize from './database/db.js';
 import refreshTokenMiddleware from './middlewares/tokenrefresh.midd.js';
+import { uploadErrorHandler } from './middlewares/uploadImage.middleware.js';
 import { associateAllModels } from './models/index.js';
 import { seedInitialData } from './seed.js';
 
@@ -82,3 +83,4 @@ app.use('/api', descuentos);
 app.use('/api', tipos_descuento);
 app.use('/api', metodos_pago);
 app.use('/api', notificaciones);
+app.use(uploadErrorHandler);
