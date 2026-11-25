@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import sequelize from '../database/db.js';
-import { Op } from "sequelize";
+import { Op, literal } from "sequelize";
 import {
   Pedidos,
   Clientes,
@@ -189,7 +189,7 @@ export const getPedidoById = async (id) => {
 const procesarStockYProduccion = async (pedidoId, t) => {
   const detalle = await Detalle_pedido.findAll({
     where: { pedido_id: pedidoId },
-    include: [{ model: Productos, attributes: ['id', 'stock'] }],
+    include: [{ model: Productos, attributes: ['id'] }],
     transaction: t
   });
 
@@ -198,13 +198,23 @@ const procesarStockYProduccion = async (pedidoId, t) => {
   for (const item of detalle) {
     if (!item.Producto) continue;
 
-    if (item.Producto.stock >= item.cantidad) {
-      await Productos.decrement('stock', {
-        by: item.cantidad,
-        where: { id: item.Producto.id },
-        transaction: t
-      });
-    } else {
+    const cantidad = Number(item.cantidad);
+    if (!Number.isSafeInteger(cantidad) || cantidad <= 0) {
+      throw new Error('La cantidad del producto debe ser un entero positivo');
+    }
+
+    // La condición y el descuento se ejecutan juntos para evitar ventas concurrentes con stock obsoleto.
+    const [filasActualizadas] = await Productos.update({
+      stock: literal(`"stock" - ${cantidad}`)
+    }, {
+      where: {
+        id: item.Producto.id,
+        stock: { [Op.gte]: cantidad }
+      },
+      transaction: t
+    });
+
+    if (filasActualizadas === 0) {
       lineasSinStock.push(item);
     }
   }
@@ -401,8 +411,17 @@ export const putPagoEstado = async (pedidoId, estadoPagoId) => {
       throw new Error('Estado de pago no válido, solo se permite Verificado o Rechazado');
     }
 
-    const pago = await Pagos.findOne({ where: { pedido_id: pedidoId } });
+    const pago = await Pagos.findOne({
+      where: { pedido_id: pedidoId },
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    });
     if (!pago) throw new Error('No se encontró el pago asociado a este pedido');
+
+    if (Number(pago.estado_pago_id) === estadoPagoIdNum) {
+      await t.commit();
+      return getPedidoById(pedidoId);
+    }
 
     await pago.update({ estado_pago_id: estadoPagoIdNum }, { transaction: t });
 
