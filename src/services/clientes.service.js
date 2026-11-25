@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { Clientes } from "../models/index.js";
 
 export const getClientes = async () => {
@@ -22,17 +23,34 @@ export const getClienteByEmail = async (email) => {
 
 export const buscarOCrearCliente = async (datos) => {
   try {
-    const [cliente] = await Clientes.findOrCreate({
-      where: { email: datos.email },
+    const documento = datos.documento?.trim();
+    const email = datos.email?.trim().toLowerCase();
+    if (!documento && !email) {
+      throw new Error("Se requiere un documento o correo para identificar al cliente");
+    }
+
+    const [cliente, creado] = await Clientes.findOrCreate({
+      where: {
+        [Op.or]: [
+          ...(documento ? [{ documento }] : []),
+          ...(email ? [{ email }] : [])
+        ]
+      },
       defaults: {
         nombres: datos.nombres,
         apellidos: datos.apellidos,
-        documento: datos.documento,
+        documento,
         telefono: datos.telefono,
         tipo_cliente_id: datos.tipo_cliente_id,
+        email,
         activo: true
       }
     });
+
+    if (!creado) {
+      throw new Error("Ya existe un cliente registrado con ese documento o correo electrónico");
+    }
+
     return cliente;
   } catch (error) {
     console.error(error);
