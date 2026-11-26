@@ -25,6 +25,7 @@ import {
   Modelo_tallas
 } from "../models/index.js";
 import { crearNotificacion, TIPOS_NOTIFICACION } from './notificaciones.service.js';
+import { parsePagination } from '../utils/pagination.util.js';
 
 const ESTADO_PAGO_VERIFICADO = 2;
 const ESTADO_PAGO_RECHAZADO = 3;
@@ -41,6 +42,7 @@ const TIPO_VENTA_PRESENCIAL = 3;
 export const getPedidos = async (filters = {}) => {
   try {
     const where = {};
+    const pagination = parsePagination(filters, { defaultLimit: 100, maxLimit: 100 });
 
     if (filters.cliente_id) {
       where.cliente_id = filters.cliente_id;
@@ -56,6 +58,7 @@ export const getPedidos = async (filters = {}) => {
 
     return await Pedidos.findAll({
       where,
+      ...pagination,
       include: [
         {
           model: Clientes,
@@ -107,7 +110,7 @@ export const getPedidos = async (filters = {}) => {
           ]
         }
       ],
-      order: [['fecha', 'DESC']]
+      order: [['fecha', 'DESC'], ['id', 'DESC']]
     });
   } catch (error) {
     console.error('Error fetching orders:', error);
@@ -115,9 +118,9 @@ export const getPedidos = async (filters = {}) => {
   }
 };
 
-export const getPedidosByCliente = async (clienteId) => {
+export const getPedidosByCliente = async (clienteId, pagination = {}) => {
   try {
-    return await getPedidos({ cliente_id: clienteId });
+    return await getPedidos({ ...pagination, cliente_id: clienteId });
   } catch (error) {
     console.error('Error fetching client orders:', error);
     throw error;

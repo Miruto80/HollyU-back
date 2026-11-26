@@ -2,10 +2,10 @@ import { getProducciones, avanzarProduccion } from "../services/producciones.ser
 
 export const getProduccionesController = async (req, res) => {
   try {
-    const producciones = await getProducciones();
+    const producciones = await getProducciones(req.query);
     res.json(producciones);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 

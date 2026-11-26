@@ -2,18 +2,17 @@ import { getPedidos, getPedidosByCliente, getPedidoById, postPedido, putPagoEsta
 
 export const getPedidosController = async (req, res) => {
   try {
-    const { tipo_venta_id } = req.query;
-    const pedidos = await getPedidos({ tipo_venta_id });
+    const pedidos = await getPedidos(req.query);
     res.json(pedidos);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
 
 export const getPedidosByClienteController = async (req, res) => {
     try {
         const { clienteId } = req.params;
-        const pedidos = await getPedidosByCliente(clienteId);
+        const pedidos = await getPedidosByCliente(clienteId, req.query);
 
         if (!pedidos.length) {
             return res.status(404).json({ message: 'No se encontraron pedidos para este cliente' });
@@ -22,7 +21,7 @@ export const getPedidosByClienteController = async (req, res) => {
         res.json(pedidos);
     } catch (error) {
         console.error('Error fetching client orders:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(error.statusCode || 500).json({ error: error.message });
     }
 };
 

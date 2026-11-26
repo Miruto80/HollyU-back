@@ -1,13 +1,16 @@
 import { Producciones, Estados_produccion, Pedidos, Clientes } from "../models/index.js";
 import sequelize from '../database/db.js';
+import { parsePagination } from '../utils/pagination.util.js';
 
 export const getProducciones = async (filters = {}) => {
   try {
     const where = {};
+    const pagination = parsePagination(filters, { defaultLimit: 100, maxLimit: 100 });
     if (filters.estado_produccion_id) where.estado_produccion_id = filters.estado_produccion_id;
 
     return await Producciones.findAll({
       where,
+      ...pagination,
       include: [
         { model: Estados_produccion, attributes: ['id', 'nombre', 'orden'] },
         {
@@ -16,7 +19,7 @@ export const getProducciones = async (filters = {}) => {
           include: [{ model: Clientes, attributes: ['nombres', 'apellidos'] }]
         }
       ],
-      order: [['fecha_inicio', 'DESC']]
+      order: [['fecha_inicio', 'DESC'], ['id', 'DESC']]
     });
   } catch (error) {
     console.error('Error fetching producciones:', error.message);

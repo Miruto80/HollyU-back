@@ -20,6 +20,7 @@ import {
   Tipo_bota,
   Producto_tipo_bota
 } from '../models/index.js';
+import { parsePagination } from '../utils/pagination.util.js';
 
 const ESTATUS_ELIMINADO = 0;
 const ESTATUS_ACTIVO = 1;
@@ -29,13 +30,16 @@ const ESTADO_PAGO_VERIFICADO = 2
 export const getProductos = async (filters = {}) => {
   try {
     const where = { estatus: { [Op.ne]: ESTATUS_ELIMINADO } }; // nunca mostrar eliminados
+    const pagination = parsePagination(filters, { defaultLimit: 100, maxLimit: 100 });
 
     if (filters.categoria_id) where.categoria_id = filters.categoria_id;
     if (filters.genero_id) where.genero_id = filters.genero_id;
     if (filters.estatus !== undefined) where.estatus = Number(filters.estatus);
 
-    return await Productos.findAll({
+    const queryOptions = {
       where,
+      ...pagination,
+      order: [['id', 'ASC']],
       attributes: [
         'id', 'tipo_bota_id', 'nombre', 'estatus', 'precio', 'precio_mayor', 'stock',
         'permite_personalizacion', 'tiempo_fabricacion', 'created_at'
@@ -52,7 +56,17 @@ export const getProductos = async (filters = {}) => {
           required: false
         }
       ]
-    });
+    };
+
+    if (filters.include_total === 'true') {
+      const [data, total] = await Promise.all([
+        Productos.findAll(queryOptions),
+        Productos.count({ where })
+      ]);
+      return { data, total };
+    }
+
+    return await Productos.findAll(queryOptions);
   } catch (error) {
     console.error(error);
     throw error;

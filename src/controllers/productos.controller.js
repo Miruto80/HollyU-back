@@ -6,13 +6,14 @@ import {getProductos,
   cambiarEstatusProducto, 
   marcarImagenPrincipal, 
   eliminarImagenProducto, reemplazarImagenProducto, getProductosMasVendidos } from '../services/productos.service.js';
+import { parseBoundedLimit } from '../utils/pagination.util.js';
 
 export const getProductosController = async (req, res) => {
     try {
         const productos = await getProductos(req.query);
         res.json(productos);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.statusCode || 500).json({ message: error.message });
     }
 };
 
@@ -111,10 +112,10 @@ export const patchImagenPrincipalController = async (req, res) => {
 
 export const getProductosMasVendidosController = async (req, res) => {
   try {
-    const limit = req.query.limit ? Number(req.query.limit) : 6;
+    const limit = parseBoundedLimit(req.query.limit, { defaultLimit: 6, maxLimit: 50 });
     const productos = await getProductosMasVendidos(limit);
     res.json(productos);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.statusCode || 500).json({ message: error.message });
   }
 };
