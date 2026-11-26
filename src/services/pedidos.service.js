@@ -25,6 +25,7 @@ import {
   Modelo_tallas
 } from "../models/index.js";
 import { crearNotificacion, TIPOS_NOTIFICACION } from './notificaciones.service.js';
+import { enviarNotificacionNuevoPedido } from './correo.service.js';
 import { parsePagination } from '../utils/pagination.util.js';
 
 const ESTADO_PAGO_VERIFICADO = 2;
@@ -394,6 +395,15 @@ export const postPedido = async (payload) => {
     }
 
     await t.commit();
+
+    if (Number(tipo_venta_id) !== TIPO_VENTA_PRESENCIAL) {
+      try {
+        await enviarNotificacionNuevoPedido({ pedidoId: pedido.id, total });
+      } catch (emailError) {
+        console.error(`Error enviando correo para el pedido web #${pedido.id}:`, emailError);
+      }
+    }
+
     return getPedidoById(pedido.id);
 
   } catch (error) {

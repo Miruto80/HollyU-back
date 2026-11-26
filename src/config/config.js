@@ -12,7 +12,8 @@ export default {
     smtppass: process.env.SMTP_PASSWORD,
     smtpname: process.env.SMTP_FROM,
     smtpserver: process.env.SMTP_SERVER,
-    smtpports: process.env.SMTP_PORT,
+    smtpports: Number(process.env.SMTP_PORT || 587),
+    smtpTo: process.env.SMTP_TO,
     port: process.env.PORT,
     secret: process.env.JWTPASSWORD,
     jwtExpiresIn:process.env.JWTEXPIRES
