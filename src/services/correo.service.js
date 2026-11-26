@@ -103,3 +103,76 @@ export const enviarNotificacionNuevoPedido = async ({ pedidoId, total }) => {
     `
   });
 };
+
+export const enviarCorreoRestablecerContrasena = async ({ email, nombres, token }) => {
+  const remitente = config.smtpname || config.smtpuser;
+  if (!remitente) {
+    throw new Error('SMTP_FROM o SMTP_USER debe estar configurado');
+  }
+
+  const resetUrl = `${config.frontendUrl.replace(/\/+$/, '')}/restablecer-contrasena?token=${encodeURIComponent(token)}`;
+  const nombreHtml = escapeHtml(nombres || 'cliente');
+
+  await smtpTransport.sendMail({
+    from: remitente,
+    to: email,
+    subject: 'Restablece tu contraseña de Holly Uniformes',
+    text: [
+      `Hola ${nombres || 'cliente'},`,
+      '',
+      'Recibimos una solicitud para restablecer la contraseña de tu cuenta de Holly Uniformes.',
+      `Abre este enlace para elegir una contraseña nueva: ${resetUrl}`,
+      '',
+      'El enlace vence en 1 hora y solo puede utilizarse una vez.',
+      'Si no solicitaste este cambio, puedes ignorar este correo.'
+    ].join('\n'),
+    html: `
+      <!DOCTYPE html>
+      <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Restablece tu contraseña</title>
+        </head>
+        <body style="margin:0;padding:0;background-color:#f3f4f7;font-family:Arial,Helvetica,sans-serif;color:#202333;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f3f4f7;padding:32px 12px;">
+            <tr>
+              <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%;max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
+                  <tr>
+                    <td style="background-color:#080a1c;padding:25px 32px;border-bottom:4px solid #e5b83f;">
+                      <p style="margin:0;color:#e5b83f;font-size:13px;font-weight:bold;letter-spacing:4px;">HOLLY</p>
+                      <p style="margin:5px 0 0;color:#ffffff;font-size:11px;letter-spacing:3px;">UNIFORMES</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:34px 32px 32px;">
+                      <p style="margin:0 0 10px;color:#b28b23;font-size:12px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;">Seguridad de la cuenta</p>
+                      <h1 style="margin:0;color:#0b2545;font-size:25px;line-height:1.3;">Restablece tu contraseña</h1>
+                      <p style="margin:16px 0;color:#68707a;font-size:15px;line-height:1.6;">Hola ${nombreHtml}, recibimos una solicitud para cambiar la contraseña de tu cuenta.</p>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;">
+                        <tr>
+                          <td align="center" bgcolor="#e5b83f" style="border-radius:6px;">
+                            <a href="${resetUrl}" style="display:inline-block;padding:14px 24px;color:#080a1c;font-size:15px;font-weight:bold;text-decoration:none;">Crear contraseña nueva</a>
+                          </td>
+                        </tr>
+                      </table>
+                      <p style="margin:0;color:#68707a;font-size:13px;line-height:1.6;">El enlace vence en <strong>1 hora</strong> y solo puede utilizarse una vez.</p>
+                      <p style="margin:18px 0 0;color:#68707a;font-size:13px;line-height:1.6;">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="${resetUrl}" style="color:#0b2545;word-break:break-all;">${resetUrl}</a></p>
+                      <p style="margin:24px 0 0;color:#68707a;font-size:13px;line-height:1.6;">Si no solicitaste este cambio, ignora este correo. Tu contraseña no cambiará.</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color:#080a1c;padding:18px 32px;text-align:center;">
+                      <p style="margin:0;color:#c5c6ce;font-size:12px;">Holly Uniformes · Mensaje automático</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `
+  });
+};

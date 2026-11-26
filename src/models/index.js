@@ -15,6 +15,7 @@ import { Medidas, associateMedidas } from './Medidas.model.js';
 import { Metodos_pago, associateMetodos_pago } from './Metodos_pago.model.js';
 import { Notificaciones, associateNotificaciones } from './Notificaciones.model.js';
 import { Pagos, associatePagos } from './Pagos.model.js';
+import { PasswordResetTokens } from './PasswordResetTokens.model.js';
 import { Pedidos, associatePedidos } from './Pedidos.model.js';
 import { Personalizaciones, associatePersonalizaciones } from './Personalizaciones.model.js';
 import { Producciones, associateProducciones } from './Producciones.model.js';
@@ -94,6 +95,7 @@ export {
   Metodos_pago,
   Notificaciones,
   Pagos,
+  PasswordResetTokens,
   Pedidos,
   Personalizaciones,
   Producciones,

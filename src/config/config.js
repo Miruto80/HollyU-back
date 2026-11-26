@@ -14,6 +14,7 @@ export default {
     smtpserver: process.env.SMTP_SERVER,
     smtpports: Number(process.env.SMTP_PORT || 587),
     smtpTo: process.env.SMTP_TO,
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
     port: process.env.PORT,
     secret: process.env.JWTPASSWORD,
     jwtExpiresIn:process.env.JWTEXPIRES
