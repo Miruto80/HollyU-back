@@ -29,7 +29,7 @@ export const enviarNotificacionNuevoPedido = async ({ pedidoId, total }) => {
     to: config.smtpTo,
     subject: `Nuevo pedido web #${pedidoId}`,
     text: [
-      'HOLLY UNIFORMES',
+      'Holy Holy',
       '',
       'Nuevo pedido recibido',
       `Pedido web #${pedidoIdTexto}`,
@@ -85,13 +85,13 @@ export const enviarNotificacionNuevoPedido = async ({ pedidoId, total }) => {
                         </tr>
                       </table>
                       <p style="margin:24px 0 0;color:#68707a;font-size:13px;line-height:1.6;">
-                        Este es un aviso automático de Holly Uniformes. No respondas a este correo.
+                        Este es un aviso automático de Holy Holy. No respondas a este correo.
                       </p>
                     </td>
                   </tr>
                   <tr>
                     <td style="background-color:#080a1c;padding:18px 32px;text-align:center;">
-                      <p style="margin:0;color:#c5c6ce;font-size:12px;">Holly Uniformes · Notificación automática</p>
+                      <p style="margin:0;color:#c5c6ce;font-size:12px;">Holy Holy · Notificación automática</p>
                     </td>
                   </tr>
                 </table>
