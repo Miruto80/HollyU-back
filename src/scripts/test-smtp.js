@@ -1,5 +1,6 @@
 import { smtpTransport } from '../config/smtp.js';
 import config from '../config/config.js';
+import { enviarNotificacionNuevoPedido } from '../services/correo.service.js';
 
 try {
   if (!config.smtpTo) {
@@ -7,13 +8,11 @@ try {
   }
 
   await smtpTransport.verify();
-  const result = await smtpTransport.sendMail({
-    from: config.smtpname || config.smtpuser,
-    to: config.smtpTo,
-    subject: 'Prueba SMTP de HollyU',
-    text: 'El envío de correo de HollyU está funcionando.'
+  await enviarNotificacionNuevoPedido({
+    pedidoId: 'PRUEBA',
+    total: 'Bs. 125,00'
   });
-  console.log(`Correo de prueba enviado: ${result.messageId}`);
+  console.log('Correo de prueba enviado con la plantilla de nuevo pedido.');
 } catch (error) {
   console.error('No se pudo enviar el correo de prueba SMTP:', error);
   process.exitCode = 1;
