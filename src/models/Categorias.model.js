@@ -5,6 +5,7 @@ export const Categorias = sequelize.define('Categorias', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   nombre: { type: DataTypes.STRING(80), allowNull: false, unique: true },
   descripcion: { type: DataTypes.TEXT },
+  imagen: { type: DataTypes.TEXT, allowNull: true },
   activo: { type: DataTypes.BOOLEAN, defaultValue: true }
 }, { tableName: 'categorias', timestamps: false });
 

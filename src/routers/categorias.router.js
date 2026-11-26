@@ -1,4 +1,5 @@
 import express from "express";
+import { upload } from "../middlewares/uploadImage.middleware.js";
 
 import { getCategoriasController, 
     postCategoriasController, 
@@ -11,8 +12,8 @@ const router = express.Router();
 
 router.get("/categorias", getCategoriasController);
 router.get("/categorias/:id", getCategoriasByIdController);
-router.post("/categorias", postCategoriasController);
-router.put("/categorias/:id", putCategoriasController);
+router.post("/categorias", upload.single("imagen"), postCategoriasController);
+router.put("/categorias/:id", upload.single("imagen"), putCategoriasController);
 router.delete("/categorias/:id", deleteCategoriasController);
 
 export default router;

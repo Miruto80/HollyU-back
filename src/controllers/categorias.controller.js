@@ -22,8 +22,7 @@ export const getCategoriasByIdController = async (req, res) => {
 
 export const postCategoriasController = async (req, res) => {
     try {
-        const categoriaData = req.body;
-        const newCategoria = await postCategorias(categoriaData);
+        const newCategoria = await postCategorias(req.body, req.file);
         res.status(201).json(newCategoria);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -33,8 +32,7 @@ export const postCategoriasController = async (req, res) => {
 export const putCategoriasController = async (req, res) => {
     try {
         const { id } = req.params;
-        const categoriaData = req.body;
-        const updatedCategoria = await putCategorias(id, categoriaData);
+        const updatedCategoria = await putCategorias(id, req.body, req.file);
         res.json(updatedCategoria);
     } catch (error) {
         res.status(500).json({ message: error.message });
